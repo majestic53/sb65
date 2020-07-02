@@ -32,3 +32,9 @@ The following example shows how to launch sb65 with a binary file:
 ```
 $ ./bin/sb65 -p file.bin
 ```
+
+The following example shows how to launch sb65 with a scaled display:
+
+```
+$ ./bin/sb65 -p file.bin -s 3
+```

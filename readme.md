@@ -52,16 +52,16 @@ For an example, see the launcher tool under ```tool/```
 
 #### Runtime Routines
 
-|Name    |Description|Signature                              |
-|:-------|:----------|:--------------------------------------|
-|sb65_run|Run sb65   |```int sb65_run(const sb65_conf_t *)```|
+|Name    |Description    |Signature                              |
+|:-------|:--------------|:--------------------------------------|
+|sb65_run|Run environment|```int sb65_run(const sb65_conf_t *)```|
 
 #### Misc. Routines
 
-|Name        |Description               |Signature                            |
-|:-----------|:-------------------------|:------------------------------------|
-|sb65_error  |Retrieve sb65 error string|```const char *sb65_error(void)```   |
-|sb65_version|Retrieve sb65 version     |```void sb65_version(sb65_ver_t *)```|
+|Name        |Description          |Signature                            |
+|:-----------|:--------------------|:------------------------------------|
+|sb65_error  |Retrieve error string|```const char *sb65_error(void)```   |
+|sb65_version|Retrieve version     |```void sb65_version(sb65_ver_t *)```|
 
 License
 =
