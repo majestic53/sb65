@@ -19,11 +19,24 @@
 #ifndef SB65_RUNTIME_TYPE_H_
 #define SB65_RUNTIME_TYPE_H_
 
+#include "../inc/system/device.h"
+#include "../inc/system/memory.h"
+#include "../inc/system/processor.h"
+#include "../inc/system/video.h"
 #include "../inc/runtime.h"
+
+#define BINARY_LENGTH (UINT16_MAX + 1)
+
+#define BYTE_PER_KBYTE 1024.f
 
 #define CYCLE_RATE (0 / (float)1000000) // ~0ns/cycle
 
 #define ERROR_MAX 1024
+
+#define FRAMES 60
+#define FRAME_RATE (MS_PER_SEC / (float)FRAMES) // ~16ms/frame
+
+#define MS_PER_SEC 1000
 
 #define TIMESTAMP_FORMAT "%Y-%m-%d %H:%M:%S"
 #define TIMESTAMP_MAX 32
@@ -38,7 +51,10 @@ typedef struct {
 
 typedef struct {
 	uint64_t cycle;
-	const sb65_conf_t *configuration;
+	sb65_device_t device;
+	sb65_memory_t memory;
+	sb65_processor_t processor;
+	sb65_video_t video;
 } sb65_runtime_t;
 
 static const char *ERROR[] = {

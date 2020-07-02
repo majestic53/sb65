@@ -25,6 +25,8 @@ DIR_TOOL=./tool/
 BUILD_DBG=BUILD_FLAGS=-g
 BUILD_REL=BUILD_FLAGS=-O3\ -DNDEBUG
 
+SLOTS=12
+
 all: release
 
 ### BUILD ###
@@ -59,11 +61,13 @@ uninit:
 
 lib_debug:
 	@echo ''
-	cd $(DIR_SRC) && make $(BUILD_DBG)
+	cd $(DIR_SRC) && make $(BUILD_DBG) build -j$(SLOTS)
+	cd $(DIR_SRC) && make archive
 
 lib_release:
 	@echo ''
-	cd $(DIR_SRC) && make $(BUILD_REL)
+	cd $(DIR_SRC) && make $(BUILD_REL) build -j$(SLOTS)
+	cd $(DIR_SRC) && make archive
 
 ### TOOL ###
 

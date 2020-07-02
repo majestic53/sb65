@@ -16,64 +16,44 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SB65_RUNTIME_H_
-#define SB65_RUNTIME_H_
+#ifndef SB65_SYSTEM_PROCESSOR_H_
+#define SB65_SYSTEM_PROCESSOR_H_
 
-#include "./common.h"
-#include "./sb65.h"
+#include "../common/buffer.h"
+
+typedef struct {
+	uint64_t cycle;
+
+	// TODO
+
+} sb65_processor_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-sb65_err_t sb65_runtime(
-	__in const sb65_conf_t *configuration
+sb65_err_t sb65_processor_create(
+	__in sb65_processor_t *processor,
+	__in const sb65_buffer_t *binary
 	);
 
-const char *sb65_runtime_error(void);
-
-sb65_err_t sb65_runtime_error_set(
-	__in sb65_err_t error,
-#ifndef NDEBUG
-	__in const char *file,
-	__in const char *function,
-	__in size_t line,
-#endif /* NDEBUG */
-	__in const char *format,
-	...
+void sb65_processor_destroy(
+	__in sb65_processor_t *processor
 	);
 
-void sb65_runtime_interrupt(
+void sb65_processor_interrupt(
 	__in sb65_int_t interrupt
 	);
 
-#ifndef NDEBUG
+// TODO
 
-void sb65_runtime_log(
-	__in FILE *stream,
-	__in const char *file,
-	__in const char *function,
-	__in size_t line,
-	__in const char *format,
-	...
-	);
-
-#endif /* NDEBUG */
-
-uint8_t sb65_runtime_pop(
-	__in uint16_t *address
-	);
-
-void sb65_runtime_push(
-	__in uint16_t *address,
-	__in uint8_t value
-	);
-
-uint8_t sb65_runtime_read(
+uint8_t sb65_processor_read(
+	__in const sb65_processor_t *processor,
 	__in uint16_t address
 	);
 
-void sb65_runtime_write(
+void sb65_processor_write(
+	__in sb65_processor_t *processor,
 	__in uint16_t address,
 	__in uint8_t value
 	);
@@ -82,4 +62,4 @@ void sb65_runtime_write(
 }
 #endif /* __cplusplus */
 
-#endif /* SB65_RUNTIME_H_ */
+#endif /* SB65_SYSTEM_PROCESSOR_H_ */
