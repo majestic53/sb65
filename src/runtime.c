@@ -98,7 +98,7 @@ exit:
 static sb65_err_t
 sb65_runtime_run(void)
 {
-	SDL_KeyCode input = 0;
+	uint8_t input = 0;
 	uint32_t begin = SDL_GetTicks();
 	sb65_err_t result = ERROR_SUCCESS;
 
