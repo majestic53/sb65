@@ -42,18 +42,19 @@ sb65_buffer_create(
 	buffer->data = (uint8_t *)malloc(length);
 	if(!buffer->data) {
 		result = SET_ERROR(ERROR_FAILURE, "Data=%p", buffer->data);
-		goto exit;
+		goto exit_destroy;
 	}
 
 	buffer->length = length;
 	memset(buffer->data, value, buffer->length);
 
-exit:
+exit_destroy:
 
 	if(result != ERROR_SUCCESS) {
 		sb65_buffer_destroy(buffer);
 	}
 
+exit:
 	return result;
 }
 
@@ -63,14 +64,11 @@ sb65_buffer_destroy(
 	)
 {
 
-	if(buffer) {
-
-		if(buffer->data) {
-			free(buffer->data);
-		}
-
-		memset(buffer, 0, sizeof(*buffer));
+	if(buffer->data) {
+		free(buffer->data);
 	}
+
+	memset(buffer, 0, sizeof(*buffer));
 }
 
 sb65_err_t

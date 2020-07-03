@@ -63,22 +63,7 @@
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
-#define VERSION_PATCH 2
-
-typedef enum {
-	ERROR_SUCCESS = 0,
-	ERROR_FAILURE,
-	ERROR_INVALID_PARAMETER,
-	ERROR_FILE_NOT_FOUND,
-	ERROR_UNKNOWN,
-	ERROR_MALFORMED,
-} sb65_err_t;
-
-typedef enum {
-	INTERRUPT_MASKABLE = 0,
-	INTERRUPT_NON_MASKABLE,
-	INTERRUPT_MAX,
-} sb65_int_t;
+#define VERSION_PATCH 3
 
 #define ADDRESS_LENGTH(_LOW_, _HIGH_) \
 	(((_HIGH_) + 1) - (_LOW_))
@@ -106,5 +91,20 @@ typedef enum {
 #define SET_ERROR(_ERROR_, _FORMAT_, ...) \
 	sb65_runtime_error_set(_ERROR_, _FORMAT_, __VA_ARGS__)
 #endif /* NDEBUG */
+
+typedef enum {
+	ERROR_SUCCESS = 0,
+	ERROR_FAILURE,
+	ERROR_INVALID_PARAMETER,
+	ERROR_FILE_NOT_FOUND,
+	ERROR_UNKNOWN,
+	ERROR_MALFORMED,
+} sb65_err_t;
+
+typedef enum {
+	INTERRUPT_MASKABLE = 0,
+	INTERRUPT_NON_MASKABLE,
+	INTERRUPT_MAX,
+} sb65_int_t;
 
 #endif /* SB65_COMMON_H_ */

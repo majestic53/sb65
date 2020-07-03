@@ -61,7 +61,7 @@ sb65_device_destroy(
 void
 sb65_device_step(
 	__in sb65_device_t *device,
-	__in SDL_KeyCode input
+	__in uint8_t input
 	)
 {
 	device->random = rand();

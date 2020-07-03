@@ -24,7 +24,7 @@
 typedef struct {
 	int seed;
 	uint8_t random;
-	SDL_KeyCode input;
+	uint8_t input;
 } sb65_device_t;
 
 #ifdef __cplusplus
@@ -48,7 +48,7 @@ uint8_t sb65_device_read(
 
 void sb65_device_step(
 	__in sb65_device_t *device,
-	__in SDL_KeyCode input
+	__in uint8_t input
 	);
 
 void sb65_device_write(

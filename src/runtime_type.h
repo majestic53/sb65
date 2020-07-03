@@ -30,7 +30,7 @@
 #define BYTE_PER_KBYTE 1024.f
 
 #define CYCLE_PER_FRAME 500
-#define CYCLE_RATE ((CYCLE_PER_FRAME * FRAMES) / 1000000.f) // ~34us/cycle
+#define CYCLE_RATE ((CYCLE_PER_FRAME * FRAMES) / 1000000.f) // ~33us/cycle
 
 #define ERROR_MAX 1024
 
