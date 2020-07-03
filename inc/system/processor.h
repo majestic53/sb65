@@ -22,7 +22,6 @@
 #include "../common/buffer.h"
 
 typedef struct {
-	uint64_t cycle;
 
 	// TODO
 
@@ -45,11 +44,13 @@ void sb65_processor_interrupt(
 	__in sb65_int_t interrupt
 	);
 
-// TODO
-
 uint8_t sb65_processor_read(
 	__in const sb65_processor_t *processor,
 	__in uint16_t address
+	);
+
+void sb65_processor_step(
+	__in sb65_processor_t *processor
 	);
 
 void sb65_processor_write(

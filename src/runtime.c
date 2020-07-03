@@ -30,9 +30,10 @@ sb65_runtime_destroy(void)
 	sb65_memory_destroy(&g_runtime.memory);
 	sb65_device_destroy(&g_runtime.device);
 	memset(&g_runtime, 0, sizeof(g_runtime));
-	SDL_Quit();
 
 	LOG("Runtime destroyed");
+
+	SDL_Quit();
 }
 
 static sb65_err_t
@@ -49,6 +50,8 @@ sb65_runtime_create(
 		goto exit;
 	}
 
+	memset(&g_error, 0, sizeof(g_error));
+
 	if(SDL_Init(SDL_INIT_VIDEO)) {
 		result = SET_ERROR(ERROR_FAILURE, "SDL_Init failed: %s", SDL_GetError());
 		goto exit;
@@ -64,7 +67,9 @@ sb65_runtime_create(
 		goto exit;
 	}
 
-	if((result = sb65_device_create(&g_runtime.device, &binary)) != ERROR_SUCCESS) {
+	LOG_FORMAT("Runtime created: Path=%s, Scale=%u, Seed=%i", configuration->path, configuration->scale, configuration->seed);
+
+	if((result = sb65_device_create(&g_runtime.device, &binary, configuration->seed)) != ERROR_SUCCESS) {
 		goto exit;
 	}
 
@@ -80,10 +85,6 @@ sb65_runtime_create(
 		goto exit;
 	}
 
-	memset(&g_error, 0, sizeof(g_error));
-
-	LOG_FORMAT("Runtime created: Path=%s, Scale=%u", configuration->path, configuration->scale);
-
 exit:
 	sb65_buffer_destroy(&binary);
 
@@ -94,88 +95,63 @@ exit:
 	return result;
 }
 
-#ifndef NDEBUG
-
-void
-sb65_runtime_log(
-	__in FILE *stream,
-	__in const char *file,
-	__in const char *function,
-	__in size_t line,
-	__in const char *format,
-	...
-	)
-{
-	time_t current;
-	char timestamp[TIMESTAMP_MAX] = {};
-	float elapsed = (g_runtime.cycle * CYCLE_RATE);
-
-	current = time(NULL);
-	strftime(timestamp, TIMESTAMP_MAX, TIMESTAMP_FORMAT, localtime(&current));
-
-	if(format) {
-		int length = 0;
-		va_list arguments;
-		char message[TRACE_MAX] = {};
-
-		va_start(arguments, format);
-		length = vsnprintf(message, TRACE_MAX, format, arguments);
-		va_end(arguments);
-
-		if(length < 0) {
-			snprintf(message, TRACE_MAX, "%s", TRACE_MALFORMED);
-		}
-
-		fprintf(stream, "[%s] {%lu (%.02f ms)} %s (%s:%s:%zu)\n", timestamp, g_runtime.cycle, elapsed, message,
-			file, function, line);
-	} else {
-		fprintf(stream, "[%s] {%lu (%.02f ms)} (%s:%s:%zu)\n", timestamp, g_runtime.cycle, elapsed,
-			file, function,line);
-	}
-}
-
-#endif /* NDEBUG */
-
 static sb65_err_t
 sb65_runtime_run(void)
 {
+	SDL_KeyCode input = 0;
+	uint32_t begin = SDL_GetTicks();
 	sb65_err_t result = ERROR_SUCCESS;
-	uint32_t begin = SDL_GetTicks(), frame = 0;
 
 	LOG("Runtime started");
 
 	for(;;) {
 		SDL_Event event = {};
 		float framerate, frequency;
-		uint32_t end = SDL_GetTicks();
+		uint32_t cycle = 0, end = SDL_GetTicks();
 
 		if((framerate = (end - begin)) >= MS_PER_SEC) {
-			framerate = (frame - ((framerate - MS_PER_SEC) / (float)FRAMES));
+			framerate = (g_runtime.frame - ((framerate - MS_PER_SEC) / (float)FRAMES));
 #ifndef NDEBUG
 			//sb65_display_framerate(&g_runtime.video.display, (framerate > 0.f) ? framerate : 0.f);
 #endif /* NDEBUG */
 			begin = end;
-			frame = 0;
+			g_runtime.frame = 0;
 		}
 
 		while(SDL_PollEvent(&event)) {
 
 			switch(event.type) {
+				case SDL_KEYDOWN:
+				case SDL_KEYUP:
+
+					if(!event.key.repeat) {
+						input = SDL_GetKeyFromScancode(event.key.keysym.scancode);
+
+						LOG_FORMAT("Input %s: %u(%02x)", (event.type == SDL_KEYDOWN) ? "pressed" : "released",
+								input, input);
+					}
+					break;
 				case SDL_QUIT:
+					LOG("Quit event");
 					goto exit;
 				default:
 					break;
 			}
 		}
 
-		// TODO: STEP SUBSYSTEMS
-		// TODO: INCREMENT CYCLE COUNT
+		while(cycle++ < CYCLE_PER_FRAME) {
+			sb65_device_step(&g_runtime.device, input);
+			sb65_processor_step(&g_runtime.processor);
+			++g_runtime.cycle;
+		}
+
+		sb65_video_step(&g_runtime.video);
 
 		if((frequency = (SDL_GetTicks() - end)) < FRAME_RATE) {
 			SDL_Delay(FRAME_RATE - frequency);
 		}
 
-		++frame;
+		++g_runtime.frame;
 	}
 
 exit:
@@ -198,11 +174,10 @@ sb65_runtime(
 
 	if((result = sb65_runtime_create(configuration)) == ERROR_SUCCESS) {
 		result = sb65_runtime_run();
+		sb65_runtime_destroy();
 	}
 
 exit:
-	sb65_runtime_destroy();
-
 	return result;
 }
 
@@ -260,6 +235,48 @@ sb65_runtime_interrupt(
 {
 	sb65_processor_interrupt(interrupt);
 }
+
+#ifndef NDEBUG
+
+void
+sb65_runtime_log(
+	__in FILE *stream,
+	__in const char *file,
+	__in const char *function,
+	__in size_t line,
+	__in const char *format,
+	...
+	)
+{
+	time_t current;
+	char timestamp[TIMESTAMP_MAX] = {};
+	float elapsed = (g_runtime.cycle * CYCLE_RATE);
+
+	current = time(NULL);
+	strftime(timestamp, TIMESTAMP_MAX, TIMESTAMP_FORMAT, localtime(&current));
+
+	if(format) {
+		int length = 0;
+		va_list arguments;
+		char message[TRACE_MAX] = {};
+
+		va_start(arguments, format);
+		length = vsnprintf(message, TRACE_MAX, format, arguments);
+		va_end(arguments);
+
+		if(length < 0) {
+			snprintf(message, TRACE_MAX, "%s", TRACE_MALFORMED);
+		}
+
+		fprintf(stream, "[%s] {%u (%.02f ms)} %s (%s:%s:%zu)\n", timestamp, g_runtime.cycle, elapsed, message,
+			file, function, line);
+	} else {
+		fprintf(stream, "[%s] {%u (%.02f ms)} (%s:%s:%zu)\n", timestamp, g_runtime.cycle, elapsed,
+			file, function,line);
+	}
+}
+
+#endif /* NDEBUG */
 
 uint8_t
 sb65_runtime_pop(

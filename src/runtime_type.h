@@ -29,12 +29,13 @@
 
 #define BYTE_PER_KBYTE 1024.f
 
-#define CYCLE_RATE (0 / (float)1000000) // ~0ns/cycle
+#define CYCLE_PER_FRAME 500
+#define CYCLE_RATE ((CYCLE_PER_FRAME * FRAMES) / 1000000.f) // ~34us/cycle
 
 #define ERROR_MAX 1024
 
-#define FRAMES 60
-#define FRAME_RATE (MS_PER_SEC / (float)FRAMES) // ~16ms/frame
+#define FRAMES 60.f
+#define FRAME_RATE (MS_PER_SEC / FRAMES) // ~16ms/frame
 
 #define MS_PER_SEC 1000
 
@@ -50,7 +51,8 @@ typedef struct {
 } sb65_error_t;
 
 typedef struct {
-	uint64_t cycle;
+	uint32_t cycle;
+	uint32_t frame;
 	sb65_device_t device;
 	sb65_memory_t memory;
 	sb65_processor_t processor;

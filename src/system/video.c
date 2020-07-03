@@ -50,6 +50,14 @@ sb65_video_read(
 }
 
 void
+sb65_video_step(
+	__in const sb65_video_t *video
+	)
+{
+	// TODO
+}
+
+void
 sb65_video_write(
 	__in sb65_video_t *video,
 	__in uint16_t address,

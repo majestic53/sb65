@@ -21,16 +21,17 @@ sb65 [args]
 
 -h	Display help information
 -p	Specify binary path
+-r	Specify random seed
 -s	Specify display scale
 -v	Display version information
 ```
 
 #### Examples
 
-The following example shows how to launch sb65 with a binary file:
+The following example shows how to launch sb65 with a binary file and random seed:
 
 ```
-$ ./bin/sb65 -p file.bin
+$ ./bin/sb65 -p file.bin -r 12345
 ```
 
 The following example shows how to launch sb65 with a scaled display:

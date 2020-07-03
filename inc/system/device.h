@@ -22,9 +22,9 @@
 #include "../common/buffer.h"
 
 typedef struct {
-	uint64_t cycle;
+	int seed;
 	uint8_t random;
-	uint8_t input;
+	SDL_KeyCode input;
 } sb65_device_t;
 
 #ifdef __cplusplus
@@ -33,18 +33,22 @@ extern "C" {
 
 sb65_err_t sb65_device_create(
 	__in sb65_device_t *device,
-	__in const sb65_buffer_t *binary
+	__in const sb65_buffer_t *binary,
+	__in int seed
 	);
 
 void sb65_device_destroy(
 	__in sb65_device_t *device
 	);
 
-// TODO
-
 uint8_t sb65_device_read(
 	__in const sb65_device_t *device,
 	__in uint16_t address
+	);
+
+void sb65_device_step(
+	__in sb65_device_t *device,
+	__in SDL_KeyCode input
 	);
 
 void sb65_device_write(

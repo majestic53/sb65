@@ -21,12 +21,31 @@
 sb65_err_t
 sb65_device_create(
 	__in sb65_device_t *device,
-	__in const sb65_buffer_t *binary
+	__in const sb65_buffer_t *binary,
+	__in int seed
 	)
 {
-	// TOOD
-	return ERROR_SUCCESS;
-	// ---
+	sb65_err_t result = ERROR_SUCCESS;
+
+	if(!device) {
+		result = SET_ERROR(ERROR_INVALID_PARAMETER, "Device=%p", device);
+		goto exit;
+	}
+
+	srand(device->seed);
+	device->random = binary->data[ADDRESS_DEVICE_RANDOM];
+	device->input = binary->data[ADDRESS_DEVICE_INPUT];
+	device->seed = seed;
+
+	LOG_FORMAT("Device created: Random=%u(%02x), Input=%u(%02x), Seed=%i", device->random, device->random,
+		device->input, device->input, device->seed, device->seed);
+
+	if(result != ERROR_SUCCESS) {
+		sb65_device_destroy(device);
+	}
+
+exit:
+	return result;
 }
 
 void
@@ -34,7 +53,19 @@ sb65_device_destroy(
 	__in sb65_device_t *device
 	)
 {
-	// TODO
+	LOG("Device destroyed");
+
+	memset(device, 0, sizeof(*device));
+}
+
+void
+sb65_device_step(
+	__in sb65_device_t *device,
+	__in SDL_KeyCode input
+	)
+{
+	device->random = rand();
+	device->input = input;
 }
 
 uint8_t
@@ -43,9 +74,23 @@ sb65_device_read(
 	__in uint16_t address
 	)
 {
-	// TODO
-	return 0;
-	// ---
+	uint8_t result = 0;
+
+	switch(address) {
+		case ADDRESS_DEVICE_RANDOM:
+			result = device->random;
+			break;
+		case ADDRESS_DEVICE_INPUT:
+			result = device->input;
+			break;
+		default:
+			result = UINT8_MAX;
+
+			LOG_ERROR_FORMAT("Unsupported read address", "[%04x]->%02x", address, result);
+			break;
+	}
+
+	return result;
 }
 
 void
@@ -55,5 +100,10 @@ sb65_device_write(
 	__in uint8_t value
 	)
 {
-	// TODO
+
+	switch(address) {
+		default:
+			LOG_ERROR_FORMAT("Unsupported write address", "[%04x]<-%02x", address, value);
+			break;
+	}
 }

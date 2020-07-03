@@ -40,8 +40,6 @@ void sb65_memory_destroy(
 	__in sb65_memory_t *memory
 	);
 
-// TODO
-
 uint8_t sb65_memory_read(
 	__in const sb65_memory_t *memory,
 	__in uint16_t address

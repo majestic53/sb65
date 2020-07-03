@@ -22,6 +22,7 @@
 typedef struct {
 	const char *path;
 	int scale;
+	int seed;
 } sb65_conf_t;
 
 typedef struct {

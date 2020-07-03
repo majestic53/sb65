@@ -30,6 +30,7 @@
 enum {
 	FLAG_HELP = 0,
 	FLAG_PATH,
+	FLAG_RANDOM,
 	FLAG_SCALE,
 	FLAG_VERSION,
 	FLAG_MAX,
@@ -37,9 +38,10 @@ enum {
 
 #define OPTION_HELP 'h'
 #define OPTION_PATH 'p'
+#define OPTION_RANDOM 'r'
 #define OPTION_SCALE 's'
 #define OPTION_VERSION 'v'
-#define OPTIONS "hp:s:v"
+#define OPTIONS "hp:r:s:v"
 #define OPTIONS_MIN 2
 
 #define SCALE_DEFAULT 1
@@ -47,6 +49,7 @@ enum {
 static const char *FLAG[] = {
 	"-h",
 	"-p",
+	"-r",
 	"-s",
 	"-v",
 	};
@@ -54,6 +57,7 @@ static const char *FLAG[] = {
 static const char *FLAG_DESC[] = {
 	"Display help information",
 	"Specify binary path",
+	"Specify random seed",
 	"Specify display scale",
 	"Display version information",
 	};

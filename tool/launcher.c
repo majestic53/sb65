@@ -92,6 +92,9 @@ sb65_launch(
 			case OPTION_PATH:
 				g_launcher.configuration.path = optarg;
 				break;
+			case OPTION_RANDOM:
+				g_launcher.configuration.seed = strtol(optarg, NULL, 10);
+				break;
 			case OPTION_SCALE:
 				g_launcher.configuration.scale = strtol(optarg, NULL, 10);
 				break;
@@ -104,6 +107,7 @@ sb65_launch(
 					case OPTION_PATH:
 						fprintf(stderr, "Option missing: -%c\n", optopt);
 						break;
+					case OPTION_RANDOM:
 					case OPTION_SCALE:
 						fprintf(stderr, "Option missing value: -%c\n", optopt);
 						break;

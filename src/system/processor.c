@@ -57,6 +57,14 @@ sb65_processor_read(
 }
 
 void
+sb65_processor_step(
+	__in sb65_processor_t *processor
+	)
+{
+	// TODO
+}
+
+void
 sb65_processor_write(
 	__in sb65_processor_t *processor,
 	__in uint16_t address,

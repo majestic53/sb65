@@ -22,7 +22,6 @@
 #include "../common/buffer.h"
 
 typedef struct {
-	uint64_t cycle;
 
 	// TODO
 
@@ -42,11 +41,13 @@ void sb65_video_destroy(
 	__in sb65_video_t *video
 	);
 
-// TODO
-
 uint8_t sb65_video_read(
 	__in const sb65_video_t *video,
 	__in uint16_t address
+	);
+
+void sb65_video_step(
+	__in const sb65_video_t *video
 	);
 
 void sb65_video_write(
