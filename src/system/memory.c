@@ -47,8 +47,9 @@ sb65_memory_create(
 	memcpy(memory->stack.data, &binary->data[ADDRESS_STACK_LOW], STACK_LENGTH);
 	memcpy(memory->zero_page.data, &binary->data[ADDRESS_ZERO_PAGE_LOW], ZERO_PAGE_LENGTH);
 
-	LOG_FORMAT("Memory created: Ram[%zu]=%p, Stack[%zu]=%p, Zero[%zu]=%p", memory->ram.length, memory->ram.data,
-		memory->stack.length, memory->stack.data, memory->zero_page.length, memory->zero_page.data);
+	LOG_FORMAT(LEVEL_INFORMATION, "Memory created: Ram[%zu]=%p, Stack[%zu]=%p, Zero[%zu]=%p",
+		memory->ram.length, memory->ram.data, memory->stack.length, memory->stack.data,
+		memory->zero_page.length, memory->zero_page.data);
 
 exit_destroy:
 
@@ -65,7 +66,7 @@ sb65_memory_destroy(
 	__in sb65_memory_t *memory
 	)
 {
-	LOG("Memory destroyed");
+	LOG(LEVEL_INFORMATION, "Memory destroyed");
 
 	sb65_buffer_destroy(&memory->zero_page);
 	sb65_buffer_destroy(&memory->stack);
@@ -95,7 +96,7 @@ sb65_memory_read(
 		default:
 			result = UINT8_MAX;
 
-			LOG_ERROR_FORMAT("Unsupported read address", "[%04x]->%02x", address, result);
+			LOG_FORMAT(LEVEL_WARNING, "Unsupported read address", "[%04x]->%02x", address, result);
 			break;
 	}
 
@@ -121,7 +122,7 @@ sb65_memory_write(
 			memory->zero_page.data[address - ADDRESS_ZERO_PAGE_LOW] = value;
 			break;
 		default:
-			LOG_ERROR_FORMAT("Unsupported write address", "[%04x]<-%02x", address, value);
+			LOG_FORMAT(LEVEL_WARNING, "Unsupported write address", "[%04x]<-%02x", address, value);
 			break;
 	}
 }

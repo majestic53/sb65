@@ -29,10 +29,10 @@ sb65_runtime_destroy(void)
 	sb65_processor_destroy(&g_runtime.processor);
 	sb65_memory_destroy(&g_runtime.memory);
 	sb65_device_destroy(&g_runtime.device);
+
+	LOG(LEVEL_INFORMATION, "Runtime destroyed");
+
 	memset(&g_runtime, 0, sizeof(g_runtime));
-
-	LOG("Runtime destroyed");
-
 	SDL_Quit();
 }
 
@@ -67,7 +67,8 @@ sb65_runtime_create(
 		goto exit;
 	}
 
-	LOG_FORMAT("Runtime created: Path=%s, Scale=%u, Seed=%i", configuration->path, configuration->scale, configuration->seed);
+	LOG_FORMAT(LEVEL_INFORMATION, "Runtime created: Path=%s, Scale=%u, Seed=%i", configuration->path,
+		configuration->scale, configuration->seed);
 
 	if((result = sb65_device_create(&g_runtime.device, &binary, configuration->seed)) != ERROR_SUCCESS) {
 		goto exit;
@@ -81,7 +82,7 @@ sb65_runtime_create(
 		goto exit;
 	}
 
-	if((result = sb65_video_create(&g_runtime.video, &binary, configuration->scale)) != ERROR_SUCCESS) {
+	if((result = sb65_video_create(&g_runtime.video, &binary, configuration->path, configuration->scale)) != ERROR_SUCCESS) {
 		goto exit;
 	}
 
@@ -99,24 +100,14 @@ static sb65_err_t
 sb65_runtime_run(void)
 {
 	uint8_t input = 0;
-	uint32_t begin = SDL_GetTicks();
 	sb65_err_t result = ERROR_SUCCESS;
 
-	LOG("Runtime started");
+	LOG(LEVEL_VERBOSE, "Runtime started");
 
 	for(;;) {
+		float frequency;
 		SDL_Event event = {};
-		float framerate, frequency;
-		uint32_t cycle = 0, end = SDL_GetTicks();
-
-		if((framerate = (end - begin)) >= MS_PER_SEC) {
-			framerate = (g_runtime.frame - ((framerate - MS_PER_SEC) / (float)FRAMES));
-#ifndef NDEBUG
-			//sb65_display_framerate(&g_runtime.video.display, (framerate > 0.f) ? framerate : 0.f);
-#endif /* NDEBUG */
-			begin = end;
-			g_runtime.frame = 0;
-		}
+		uint32_t begin = SDL_GetTicks();
 
 		while(SDL_PollEvent(&event)) {
 
@@ -126,36 +117,39 @@ sb65_runtime_run(void)
 
 					if(!event.key.repeat) {
 						input = SDL_GetKeyFromScancode(event.key.keysym.scancode);
-
-						LOG_FORMAT("Input %s: %u(%02x)", (event.type == SDL_KEYDOWN) ? "pressed" : "released",
-								input, input);
 					}
 					break;
 				case SDL_QUIT:
-					LOG("Quit event");
+					LOG(LEVEL_WARNING, "Quit event");
 					goto exit;
 				default:
 					break;
 			}
 		}
 
-		while(cycle++ < CYCLE_PER_FRAME) {
+		for(;;) {
 			sb65_device_step(&g_runtime.device, input);
-			sb65_processor_step(&g_runtime.processor);
-			++g_runtime.cycle;
+
+			if(sb65_processor_step(&g_runtime.processor)) {
+				break;
+			}
 		}
 
-		sb65_video_step(&g_runtime.video);
+		g_runtime.cycle += CYCLES_PER_FRAME;
 
-		if((frequency = (SDL_GetTicks() - end)) < FRAME_RATE) {
-			SDL_Delay(FRAME_RATE - frequency);
+		if((result = sb65_video_step(&g_runtime.video)) != ERROR_SUCCESS) {
+			goto exit;
 		}
 
 		++g_runtime.frame;
+
+		if((frequency = (SDL_GetTicks() - begin)) < FRAME_RATE) {
+			SDL_Delay(FRAME_RATE - frequency);
+		}
 	}
 
 exit:
-	LOG("Runtime stopped");
+	LOG(LEVEL_VERBOSE, "Runtime stopped");
 
 	return result;
 }
@@ -216,12 +210,18 @@ sb65_runtime_error_set(
 #ifndef NDEBUG
 			snprintf(g_error.message, ERROR_MAX, "%s: %s (%s:%s:%zu)", prefix, message,
 					file, function, line);
+
+			LOG_FORMAT(LEVEL_ERROR, "%s: %s (%s:%s:%zu)", prefix, message, file, function, line);
 #else
 			snprintf(g_error.message, ERROR_MAX, "%s: %s", prefix, message);
+
+			LOG_FORMAT(LEVEL_ERROR, "%s: %s", prefix, message);
 #endif /* NDEBUG */
 		} else if(length < 0) {
 			g_error.error = ERROR_MALFORMED;
 			snprintf(g_error.message, ERROR_MAX, "%s", ERROR[ERROR_MALFORMED]);
+
+			LOG_FORMAT(LEVEL_ERROR, "%s", ERROR[ERROR_MALFORMED]);
 		}
 	}
 
@@ -241,6 +241,7 @@ sb65_runtime_interrupt(
 void
 sb65_runtime_log(
 	__in FILE *stream,
+	__in sb65_lvl_t level,
 	__in const char *file,
 	__in const char *function,
 	__in size_t line,
@@ -268,12 +269,55 @@ sb65_runtime_log(
 			snprintf(message, TRACE_MAX, "%s", TRACE_MALFORMED);
 		}
 
-		fprintf(stream, "[%s] {%u (%.02f ms)} %s (%s:%s:%zu)\n", timestamp, g_runtime.cycle, elapsed, message,
+		fprintf(stream, "%s", LEVEL[level]);
+		fprintf(stream, "[%s] {%u, %u (%.02f ms)} %s (%s:%s:%zu)\n", timestamp, g_runtime.frame, g_runtime.cycle, elapsed, message,
 			file, function, line);
 	} else {
-		fprintf(stream, "[%s] {%u (%.02f ms)} (%s:%s:%zu)\n", timestamp, g_runtime.cycle, elapsed,
+		fprintf(stream, "%s", LEVEL[level]);
+		fprintf(stream, "[%s] {%u, %u (%.02f ms)} (%s:%s:%zu)\n", timestamp, g_runtime.frame, g_runtime.cycle, elapsed,
 			file, function,line);
 	}
+
+	fprintf(stream, "%s", LEVEL[LEVEL_NONE]);
+}
+
+void
+sb65_runtime_log_memory(
+	__in FILE *stream,
+	__in uint16_t address,
+	__in uint32_t offset
+	)
+{
+	char message[BLOCK_WIDTH] = {};
+
+	for(uint32_t count = 0, index = address; index < (address + offset); ++count, ++index) {
+		uint8_t value = sb65_runtime_read(index);
+
+		if(!count || (count == BLOCK_WIDTH)) {
+
+			if(strlen(message)) {
+				fprintf(stream, "   %s", message);
+				memset(message, 0, BLOCK_WIDTH);
+			}
+
+			if(count) {
+				fprintf(stream, "\n");
+			}
+
+			fprintf(stream, "%04x |", index);
+			count = 0;
+		}
+
+		fprintf(stream, " %02x", value);
+		message[count ? (count - 1) : count] = ((isprint(value) && !isspace(value)) ? (char)value : CHARACTER_FILL);
+	}
+
+	if(strlen(message)) {
+		fprintf(stream, "   %s", message);
+		memset(message, 0, BLOCK_WIDTH);
+	}
+
+	fprintf(stream, "\n");
 }
 
 #endif /* NDEBUG */
@@ -320,7 +364,7 @@ sb65_runtime_read(
 		default:
 			result = UINT8_MAX;
 
-			LOG_ERROR_FORMAT("Unsupported read address", "[%04x]->%02x", address, result);
+			LOG_FORMAT(LEVEL_ERROR, "Unsupported read address", "[%04x]->%02x", address, result);
 			break;
 	}
 
@@ -350,7 +394,7 @@ sb65_runtime_write(
 			sb65_video_write(&g_runtime.video, address, value);
 			break;
 		default:
-			LOG_ERROR_FORMAT("Unsupported write address", "[%04x]<-%02x", address, value);
+			LOG_FORMAT(LEVEL_ERROR, "Unsupported write address", "[%04x]<-%02x", address, value);
 			break;
 	}
 }

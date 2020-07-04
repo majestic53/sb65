@@ -56,12 +56,20 @@ sb65_processor_read(
 	// ---
 }
 
-void
+bool
 sb65_processor_step(
 	__in sb65_processor_t *processor
 	)
 {
+	bool result = (++processor->cycle >= CYCLES_PER_FRAME);
+
 	// TODO
+
+	if(result) {
+		processor->cycle = 0;
+	}
+
+	return result;
 }
 
 void

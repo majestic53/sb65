@@ -51,11 +51,18 @@ void sb65_runtime_interrupt(
 
 void sb65_runtime_log(
 	__in FILE *stream,
+	__in sb65_lvl_t level,
 	__in const char *file,
 	__in const char *function,
 	__in size_t line,
 	__in const char *format,
 	...
+	);
+
+void sb65_runtime_log_memory(
+	__in FILE *stream,
+	__in uint16_t address,
+	__in uint32_t offset
 	);
 
 #endif /* NDEBUG */

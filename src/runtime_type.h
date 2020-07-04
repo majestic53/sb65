@@ -27,17 +27,17 @@
 
 #define BINARY_LENGTH (UINT16_MAX + 1)
 
+#define BLOCK_WIDTH 16
+
 #define BYTE_PER_KBYTE 1024.f
 
-#define CYCLE_PER_FRAME 500
-#define CYCLE_RATE ((CYCLE_PER_FRAME * FRAMES) / 1000000.f) // ~33us/cycle
+#define CHARACTER_FILL '.'
+
+#define CYCLE_RATE ((CYCLES_PER_FRAME * FRAMES_PER_SECOND) / 1000000.f) // ~33us/cycle
 
 #define ERROR_MAX 1024
 
-#define FRAMES 60.f
-#define FRAME_RATE (MS_PER_SEC / FRAMES) // ~16ms/frame
-
-#define MS_PER_SEC 1000
+#define FRAME_RATE (MS_PER_SEC / (float)FRAMES_PER_SECOND) // ~16ms/frame
 
 #define TIMESTAMP_FORMAT "%Y-%m-%d %H:%M:%S"
 #define TIMESTAMP_MAX 32
@@ -67,5 +67,17 @@ static const char *ERROR[] = {
 	"Unknown error",
 	"Malformed error",
 	};
+
+#ifndef NDEBUG
+
+static const char *LEVEL[] = {
+	"\x1b[0m",
+	"\x1b[91m",
+	"\x1b[93m",
+	"\x1b[94m",
+	"\x1b[90m",
+	};
+
+#endif /* NDEBUG */
 
 #endif /* SB65_RUNTIME_TYPE_H_ */

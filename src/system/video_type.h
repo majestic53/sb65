@@ -22,4 +22,6 @@
 #include "../../inc/system/video.h"
 #include "../../inc/runtime.h"
 
+#define VIDEO_LENGTH ADDRESS_LENGTH(ADDRESS_VIDEO_LOW, ADDRESS_VIDEO_HIGH)
+
 #endif /* SB65_SYSTEM_VIDEO_TYPE_H_ */

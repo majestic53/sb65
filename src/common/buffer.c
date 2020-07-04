@@ -37,8 +37,6 @@ sb65_buffer_create(
 		goto exit;
 	}
 
-	sb65_buffer_destroy(buffer);
-
 	buffer->data = (uint8_t *)malloc(length);
 	if(!buffer->data) {
 		result = SET_ERROR(ERROR_FAILURE, "Data=%p", buffer->data);

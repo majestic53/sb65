@@ -61,27 +61,36 @@
 #define ADDRESS_VECTOR_MASKABLE_HIGH 0xffff
 #define ADDRESS_VECTOR_MASKABLE_LOW 0xfffe
 
+#define CYCLES_PER_FRAME 500
+
+#define FRAMES_PER_SECOND 60
+
+#define MS_PER_SEC 1000
+
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
-#define VERSION_PATCH 3
+#define VERSION_PATCH 4
 
 #define ADDRESS_LENGTH(_LOW_, _HIGH_) \
 	(((_HIGH_) + 1) - (_LOW_))
 
 #ifndef NDEBUG
-#define LOG(_FORMAT_) \
-	sb65_runtime_log(stdout, __FILE__, __FUNCTION__, __LINE__, _FORMAT_, "")
-#define LOG_FORMAT(_FORMAT_, ...) \
-	sb65_runtime_log(stdout, __FILE__, __FUNCTION__, __LINE__, _FORMAT_, __VA_ARGS__)
-#define LOG_ERROR(_FORMAT_) \
-	sb65_runtime_log(stderr, __FILE__, __FUNCTION__, __LINE__, _FORMAT_, "")
-#define LOG_ERROR_FORMAT(_FORMAT_, ...) \
-	sb65_runtime_log(stderr, __FILE__, __FUNCTION__, __LINE__, _FORMAT_, __VA_ARGS__)
+#define LOG(_LEVEL_, _FORMAT_) \
+	sb65_runtime_log(((_LEVEL_ == LEVEL_ERROR) || (_LEVEL_ == LEVEL_WARNING)) ? stderr : stdout, _LEVEL_, \
+		__FILE__, __FUNCTION__, __LINE__, _FORMAT_, "")
+#define LOG_FORMAT(_LEVEL_, _FORMAT_, ...) \
+	sb65_runtime_log(((_LEVEL_ == LEVEL_ERROR) || (_LEVEL_ == LEVEL_WARNING)) ? stderr : stdout, _LEVEL_, \
+		__FILE__, __FUNCTION__, __LINE__, _FORMAT_, __VA_ARGS__)
 #else
-#define LOG(_FORMAT_)
-#define LOG_FORMAT(_FORMAT_, ...)
-#define LOG_ERROR(_FORMAT_)
-#define LOG_ERROR_FORMAT(_FORMAT_, ...)
+#define LOG(_LEVEL_, _FORMAT_)
+#define LOG_FORMAT(_LEVEL_, _FORMAT_, ...)
+#endif /* NDEBUG */
+
+#ifndef NDEBUG
+#define LOG_MEMORY(_STREAM_, _ADDRESS_, _OFFSET_) \
+	sb65_runtime_log_memory(_STREAM_, _ADDRESS_, _OFFSET_)
+#else
+#define LOG_MEMORY(_STREAM_, _ADDRESS_, _OFFSET_)
 #endif /* NDEBUG */
 
 #ifndef NDEBUG
@@ -91,6 +100,26 @@
 #define SET_ERROR(_ERROR_, _FORMAT_, ...) \
 	sb65_runtime_error_set(_ERROR_, _FORMAT_, __VA_ARGS__)
 #endif /* NDEBUG */
+
+typedef enum {
+	COLOR_BLACK = 0,
+	COLOR_WHITE,
+	COLOR_RED,
+	COLOR_CYAN,
+	COLOR_PURPLE,
+	COLOR_GREEN,
+	COLOR_BLUE,
+	COLOR_YELLOW,
+	COLOR_ORANGE,
+	COLOR_BROWN,
+	COLOR_RED_LIGHT,
+	COLOR_GREY_DARK,
+	COLOR_GREY,
+	COLOR_GREEN_LIGHT,
+	COLOR_BLUE_LIGHT,
+	COLOR_GREY_LIGHT,
+	COLOR_MAX,
+} sb65_col_t;
 
 typedef enum {
 	ERROR_SUCCESS = 0,
@@ -106,5 +135,14 @@ typedef enum {
 	INTERRUPT_NON_MASKABLE,
 	INTERRUPT_MAX,
 } sb65_int_t;
+
+typedef enum {
+	LEVEL_NONE = 0,
+	LEVEL_ERROR,
+	LEVEL_WARNING,
+	LEVEL_INFORMATION,
+	LEVEL_VERBOSE,
+	LEVEL_MAX,
+} sb65_lvl_t;
 
 #endif /* SB65_COMMON_H_ */

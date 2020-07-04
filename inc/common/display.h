@@ -16,53 +16,67 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SB65_SYSTEM_VIDEO_H_
-#define SB65_SYSTEM_VIDEO_H_
+#ifndef SB65_COMMON_DISPLAY_H_
+#define SB65_COMMON_DISPLAY_H_
 
-#include "../common/display.h"
+#include "./buffer.h"
+
+typedef union {
+
+	struct {
+		uint8_t blue;
+		uint8_t green;
+		uint8_t red;
+		uint8_t alpha;
+	};
+
+	uint32_t raw;
+} sb65_color_t;
 
 typedef struct {
-	uint32_t frame;
-#ifndef NDEBUG
-	uint32_t frame_begin;
-	uint32_t frame_end;
-#endif /* NDEBUG */
-	sb65_display_t display;
-	sb65_buffer_t video;
-} sb65_video_t;
+	sb65_buffer_t pixel;
+	SDL_Texture *texture;
+	const char *title;
+	SDL_Renderer *renderer;
+	SDL_Window *window;
+} sb65_display_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-sb65_err_t sb65_video_create(
-	__in sb65_video_t *video,
-	__in const sb65_buffer_t *binary,
+sb65_err_t sb65_display_create(
+	__in sb65_display_t *display,
 	__in const char *title,
 	__in int scale
 	);
 
-void sb65_video_destroy(
-	__in sb65_video_t *video
+void sb65_display_destroy(
+	__in sb65_display_t *display
 	);
 
-uint8_t sb65_video_read(
-	__in const sb65_video_t *video,
-	__in uint16_t address
+#ifndef NDEBUG
+
+void sb65_display_set_framerate(
+	__in sb65_display_t *display,
+	__in float rate
 	);
 
-sb65_err_t sb65_video_step(
-	__in sb65_video_t *video
+#endif /* NDEBUG */
+
+void sb65_display_set_pixel(
+	__in sb65_display_t *display,
+	__in sb65_col_t color,
+	__in uint8_t x,
+	__in uint8_t y
 	);
 
-void sb65_video_write(
-	__in sb65_video_t *video,
-	__in uint16_t address,
-	__in uint8_t value
+sb65_err_t sb65_display_show(
+	__in const sb65_display_t *display
 	);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* SB65_SYSTEM_VIDEO_H_ */
+#endif /* SB65_COMMON_DISPLAY_H_ */

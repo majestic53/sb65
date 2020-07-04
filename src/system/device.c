@@ -37,8 +37,8 @@ sb65_device_create(
 	device->input = binary->data[ADDRESS_DEVICE_INPUT];
 	device->seed = seed;
 
-	LOG_FORMAT("Device created: Random=%u(%02x), Input=%u(%02x), Seed=%i", device->random, device->random,
-		device->input, device->input, device->seed, device->seed);
+	LOG_FORMAT(LEVEL_INFORMATION, "Device created: Random=%u(%02x), Input=%u(%02x), Seed=%i",
+		device->random, device->random, device->input, device->input, device->seed, device->seed);
 
 	if(result != ERROR_SUCCESS) {
 		sb65_device_destroy(device);
@@ -53,7 +53,7 @@ sb65_device_destroy(
 	__in sb65_device_t *device
 	)
 {
-	LOG("Device destroyed");
+	LOG(LEVEL_INFORMATION, "Device destroyed");
 
 	memset(device, 0, sizeof(*device));
 }
@@ -65,7 +65,12 @@ sb65_device_step(
 	)
 {
 	device->random = rand();
-	device->input = input;
+
+	if(input != device->input) {
+		device->input = input;
+
+		LOG_FORMAT(LEVEL_INFORMATION, "Input changed: %u(%02x)", input, input);
+	}
 }
 
 uint8_t
@@ -86,7 +91,7 @@ sb65_device_read(
 		default:
 			result = UINT8_MAX;
 
-			LOG_ERROR_FORMAT("Unsupported read address", "[%04x]->%02x", address, result);
+			LOG_FORMAT(LEVEL_WARNING, "Unsupported read address", "[%04x]->%02x", address, result);
 			break;
 	}
 
@@ -103,7 +108,7 @@ sb65_device_write(
 
 	switch(address) {
 		default:
-			LOG_ERROR_FORMAT("Unsupported write address", "[%04x]<-%02x", address, value);
+			LOG_FORMAT(LEVEL_WARNING, "Unsupported write address", "[%04x]<-%02x", address, value);
 			break;
 	}
 }

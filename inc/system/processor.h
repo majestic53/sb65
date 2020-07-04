@@ -22,6 +22,7 @@
 #include "../common/buffer.h"
 
 typedef struct {
+	uint32_t cycle;
 
 	// TODO
 
@@ -49,7 +50,7 @@ uint8_t sb65_processor_read(
 	__in uint16_t address
 	);
 
-void sb65_processor_step(
+bool sb65_processor_step(
 	__in sb65_processor_t *processor
 	);
 

@@ -22,4 +22,6 @@
 #include "../../inc/system/processor.h"
 #include "../../inc/runtime.h"
 
+#define CYCLE 1
+
 #endif /* SB65_SYSTEM_PROCESSOR_TYPE_H_ */

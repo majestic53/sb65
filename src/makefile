@@ -36,7 +36,7 @@ archive:
 	@echo ''
 	@echo '--- ARCHIVING OBJECTS ----------------------'
 	ar rcs $(DIR_BIN_LIB)$(LIB) $(DIR_BUILD)base_runtime.o $(DIR_BUILD)base_sb65.o \
-		$(DIR_BUILD)common_buffer.o \
+		$(DIR_BUILD)common_buffer.o $(DIR_BUILD)common_display.o \
 		$(DIR_BUILD)system_device.o $(DIR_BUILD)system_memory.o $(DIR_BUILD)system_processor.o $(DIR_BUILD)system_video.o
 	cp $(DIR_INC)sb65.h $(DIR_BIN_INC)
 	@echo '--- DONE -----------------------------------'
@@ -55,10 +55,13 @@ base_sb65.o: $(DIR_SRC)sb65.c $(DIR_INC)sb65.h
 
 ### COMMON ###
 
-build_common: common_buffer.o
+build_common: common_buffer.o common_display.o
 
 common_buffer.o: $(DIR_SRC_COMMON)buffer.c $(DIR_INC_COMMON)buffer.h
 	$(CC) $(FLAGS) $(BUILD_FLAGS) -c $(DIR_SRC_COMMON)buffer.c -o $(DIR_BUILD)common_buffer.o
+
+common_display.o: $(DIR_SRC_COMMON)display.c $(DIR_INC_COMMON)display.h
+	$(CC) $(FLAGS) $(BUILD_FLAGS) -c $(DIR_SRC_COMMON)display.c -o $(DIR_BUILD)common_display.o
 
 ### SYSTEM ###
 
