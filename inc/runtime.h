@@ -72,11 +72,11 @@ void sb65_runtime_log_processor(
 #endif /* NDEBUG */
 
 uint8_t sb65_runtime_pop(
-	__in uint16_t *address
+	__in uint8_t *address
 	);
 
 void sb65_runtime_push(
-	__in uint16_t *address,
+	__in uint8_t *address,
 	__in uint8_t value
 	);
 

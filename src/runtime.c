@@ -233,7 +233,7 @@ sb65_runtime_interrupt(
 	__in sb65_int_t interrupt
 	)
 {
-	sb65_processor_interrupt(interrupt);
+	sb65_processor_interrupt(&g_runtime.processor, interrupt, false);
 }
 
 #ifndef NDEBUG
@@ -328,34 +328,34 @@ sb65_runtime_log_processor(
 	fprintf(stream, "A    | %02x\n", g_runtime.processor.a.low);
 	fprintf(stream, "X    | %02x\n", g_runtime.processor.x.low);
 	fprintf(stream, "Y    | %02x\n", g_runtime.processor.y.low);
-	fprintf(stream, "S    | %02x   [%c%c-%c%c%c%c%c]\n", g_runtime.processor.s.low, g_runtime.processor.s.flag.negative ? 'S' : '-',
-		g_runtime.processor.s.flag.overflow ? 'V' : '-', g_runtime.processor.s.flag.break_instruction ? 'B' : '-',
-		g_runtime.processor.s.flag.decimal_mode ? 'D' : '-', g_runtime.processor.s.flag.interrupt_disable ? 'I' : '-',
-		g_runtime.processor.s.flag.zero ? 'Z' : '-', g_runtime.processor.s.flag.carry ? 'C' : '-');
-	fprintf(stream, "PC   | %04x\n", g_runtime.processor.pc.raw);
-	fprintf(stream, "SP   | %04x\n", g_runtime.processor.sp.raw);
-	fprintf(stream, "NMI  | %04x\n", g_runtime.processor.iv[INTERRUPT_NON_MASKABLE].raw);
-	fprintf(stream, "RST  | %04x\n", g_runtime.processor.iv[INTERRUPT_RESET].raw);
-	fprintf(stream, "IRQ  | %04x\n", g_runtime.processor.iv[INTERRUPT_MASKABLE].raw);
+	fprintf(stream, "P    | %02x   [%c%c-%c%c%c%c%c]\n", g_runtime.processor.p.low, g_runtime.processor.p.flag.negative ? 'S' : '-',
+		g_runtime.processor.p.flag.overflow ? 'V' : '-', g_runtime.processor.p.flag.break_instruction ? 'B' : '-',
+		g_runtime.processor.p.flag.decimal_mode ? 'D' : '-', g_runtime.processor.p.flag.interrupt_disable ? 'I' : '-',
+		g_runtime.processor.p.flag.zero ? 'Z' : '-', g_runtime.processor.p.flag.carry ? 'C' : '-');
+	fprintf(stream, "PC   | %04x\n", g_runtime.processor.pc.word);
+	fprintf(stream, "SP   | %04x\n", g_runtime.processor.sp.word);
+	fprintf(stream, "NMI  | %04x\n", g_runtime.processor.iv[INTERRUPT_NON_MASKABLE].word);
+	fprintf(stream, "RST  | %04x\n", g_runtime.processor.iv[INTERRUPT_RESET].word);
+	fprintf(stream, "IRQ  | %04x\n", g_runtime.processor.iv[INTERRUPT_MASKABLE].word);
 }
 
 #endif /* NDEBUG */
 
 uint8_t
 sb65_runtime_pop(
-	__in uint16_t *address
+	__in uint8_t *address
 	)
 {
-	return sb65_runtime_read(++(*address));
+	return sb65_runtime_read(++(*address) + ADDRESS_STACK_LOW);
 }
 
 void
 sb65_runtime_push(
-	__in uint16_t *address,
+	__in uint8_t *address,
 	__in uint8_t value
 	)
 {
-	sb65_runtime_write((*address)--, value);
+	sb65_runtime_write(ADDRESS_STACK_LOW + (*address)--, value);
 }
 
 uint8_t

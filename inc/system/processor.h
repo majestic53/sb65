@@ -44,7 +44,7 @@ typedef union {
 		uint8_t high;
 	};
 
-	uint16_t raw;
+	uint16_t word;
 } sb65_register_t;
 
 typedef struct {
@@ -52,7 +52,7 @@ typedef struct {
 	sb65_register_t a;
 	sb65_register_t x;
 	sb65_register_t y;
-	sb65_register_t s;
+	sb65_register_t p;
 	sb65_register_t pc;
 	sb65_register_t sp;
 	sb65_register_t iv[INTERRUPT_MAX];
@@ -72,7 +72,9 @@ void sb65_processor_destroy(
 	);
 
 void sb65_processor_interrupt(
-	__in sb65_int_t interrupt
+	__in sb65_processor_t *processor,
+	__in sb65_int_t interrupt,
+	__in bool set_break
 	);
 
 uint8_t sb65_processor_read(
