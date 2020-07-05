@@ -320,6 +320,25 @@ sb65_runtime_log_memory(
 	fprintf(stream, "\n");
 }
 
+void
+sb65_runtime_log_processor(
+	__in FILE *stream
+	)
+{
+	fprintf(stream, "A    | %02x\n", g_runtime.processor.a.low);
+	fprintf(stream, "X    | %02x\n", g_runtime.processor.x.low);
+	fprintf(stream, "Y    | %02x\n", g_runtime.processor.y.low);
+	fprintf(stream, "S    | %02x   [%c%c-%c%c%c%c%c]\n", g_runtime.processor.s.low, g_runtime.processor.s.flag.negative ? 'S' : '-',
+		g_runtime.processor.s.flag.overflow ? 'V' : '-', g_runtime.processor.s.flag.break_instruction ? 'B' : '-',
+		g_runtime.processor.s.flag.decimal_mode ? 'D' : '-', g_runtime.processor.s.flag.interrupt_disable ? 'I' : '-',
+		g_runtime.processor.s.flag.zero ? 'Z' : '-', g_runtime.processor.s.flag.carry ? 'C' : '-');
+	fprintf(stream, "PC   | %04x\n", g_runtime.processor.pc.raw);
+	fprintf(stream, "SP   | %04x\n", g_runtime.processor.sp.raw);
+	fprintf(stream, "NMI  | %04x\n", g_runtime.processor.iv[INTERRUPT_NON_MASKABLE].raw);
+	fprintf(stream, "RST  | %04x\n", g_runtime.processor.iv[INTERRUPT_RESET].raw);
+	fprintf(stream, "IRQ  | %04x\n", g_runtime.processor.iv[INTERRUPT_MASKABLE].raw);
+}
+
 #endif /* NDEBUG */
 
 uint8_t
@@ -350,13 +369,13 @@ sb65_runtime_read(
 		case ADDRESS_DEVICE_LOW ... ADDRESS_DEVICE_HIGH:
 			result = sb65_device_read(&g_runtime.device, address);
 			break;
+		case ADDRESS_INTERRUPT_LOW ... ADDRESS_INTERRUPT_HIGH:
+			result = sb65_processor_read(&g_runtime.processor, address);
+			break;
 		case ADDRESS_RAM_LOW ... ADDRESS_RAM_HIGH:
 		case ADDRESS_STACK_LOW ... ADDRESS_STACK_HIGH:
 		case ADDRESS_ZERO_PAGE_LOW ... ADDRESS_ZERO_PAGE_HIGH:
 			result = sb65_memory_read(&g_runtime.memory, address);
-			break;
-		case ADDRESS_VECTOR_LOW ... ADDRESS_VECTOR_HIGH:
-			result = sb65_processor_read(&g_runtime.processor, address);
 			break;
 		case ADDRESS_VIDEO_LOW ... ADDRESS_VIDEO_HIGH:
 			result = sb65_video_read(&g_runtime.video, address);
@@ -382,13 +401,13 @@ sb65_runtime_write(
 		case ADDRESS_DEVICE_LOW ... ADDRESS_DEVICE_HIGH:
 			sb65_device_write(&g_runtime.device, address, value);
 			break;
+		case ADDRESS_INTERRUPT_LOW ... ADDRESS_INTERRUPT_HIGH:
+			sb65_processor_write(&g_runtime.processor, address, value);
+			break;
 		case ADDRESS_RAM_LOW ... ADDRESS_RAM_HIGH:
 		case ADDRESS_STACK_LOW ... ADDRESS_STACK_HIGH:
 		case ADDRESS_ZERO_PAGE_LOW ... ADDRESS_ZERO_PAGE_HIGH:
 			sb65_memory_write(&g_runtime.memory, address, value);
-			break;
-		case ADDRESS_VECTOR_LOW ... ADDRESS_VECTOR_HIGH:
-			sb65_processor_write(&g_runtime.processor, address, value);
 			break;
 		case ADDRESS_VIDEO_LOW ... ADDRESS_VIDEO_HIGH:
 			sb65_video_write(&g_runtime.video, address, value);

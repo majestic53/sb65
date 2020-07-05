@@ -65,6 +65,10 @@ void sb65_runtime_log_memory(
 	__in uint32_t offset
 	);
 
+void sb65_runtime_log_processor(
+	__in FILE *stream
+	);
+
 #endif /* NDEBUG */
 
 uint8_t sb65_runtime_pop(

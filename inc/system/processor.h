@@ -21,11 +21,41 @@
 
 #include "../common/buffer.h"
 
+typedef union {
+
+	struct {
+
+		union {
+
+			struct {
+				uint8_t carry : 1;
+				uint8_t zero : 1;
+				uint8_t interrupt_disable : 1;
+				uint8_t decimal_mode : 1;
+				uint8_t break_instruction : 1;
+				uint8_t unused : 1;
+				uint8_t overflow : 1;
+				uint8_t negative : 1;
+			} flag;
+
+			uint8_t low;
+		};
+
+		uint8_t high;
+	};
+
+	uint16_t raw;
+} sb65_register_t;
+
 typedef struct {
 	uint32_t cycle;
-
-	// TODO
-
+	sb65_register_t a;
+	sb65_register_t x;
+	sb65_register_t y;
+	sb65_register_t s;
+	sb65_register_t pc;
+	sb65_register_t sp;
+	sb65_register_t iv[INTERRUPT_MAX];
 } sb65_processor_t;
 
 #ifdef __cplusplus
