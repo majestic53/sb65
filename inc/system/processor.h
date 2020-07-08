@@ -21,6 +21,11 @@
 
 #include "../common/buffer.h"
 
+typedef struct {
+	bool pending;
+	bool breakpoint;
+} sb65_interrupt_t;
+
 typedef union {
 
 	struct {
@@ -32,7 +37,7 @@ typedef union {
 				uint8_t zero : 1;
 				uint8_t interrupt_disable : 1;
 				uint8_t decimal_mode : 1;
-				uint8_t break_instruction : 1;
+				uint8_t breakpoint : 1;
 				uint8_t unused : 1;
 				uint8_t overflow : 1;
 				uint8_t negative : 1;
@@ -49,13 +54,16 @@ typedef union {
 
 typedef struct {
 	uint32_t cycle;
-	sb65_register_t a;
+	sb65_register_t pc;
+	sb65_register_t ac;
 	sb65_register_t x;
 	sb65_register_t y;
-	sb65_register_t p;
-	sb65_register_t pc;
+	sb65_register_t sr;
 	sb65_register_t sp;
 	sb65_register_t iv[INTERRUPT_MAX];
+	sb65_interrupt_t iv_state[INTERRUPT_MAX];
+	bool stop;
+	bool wait;
 } sb65_processor_t;
 
 #ifdef __cplusplus
@@ -74,12 +82,25 @@ void sb65_processor_destroy(
 void sb65_processor_interrupt(
 	__in sb65_processor_t *processor,
 	__in sb65_int_t interrupt,
-	__in bool set_break
+	__in bool breakpoint
+	);
+
+uint8_t sb65_processor_pull(
+	__in sb65_processor_t *processor
+	);
+
+void sb65_processor_push(
+	__in sb65_processor_t *processor,
+	__in uint8_t value
 	);
 
 uint8_t sb65_processor_read(
 	__in const sb65_processor_t *processor,
 	__in uint16_t address
+	);
+
+void sb65_processor_reset(
+	__in sb65_processor_t *processor
 	);
 
 bool sb65_processor_step(

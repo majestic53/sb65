@@ -325,38 +325,27 @@ sb65_runtime_log_processor(
 	__in FILE *stream
 	)
 {
-	fprintf(stream, "A    | %02x\n", g_runtime.processor.a.low);
+	fprintf(stream, "CYC  | %u\n", g_runtime.cycle);
+	fprintf(stream, "PC   | %04x\n", g_runtime.processor.pc.word);
+	fprintf(stream, "AC   | %02x\n", g_runtime.processor.ac.low);
 	fprintf(stream, "X    | %02x\n", g_runtime.processor.x.low);
 	fprintf(stream, "Y    | %02x\n", g_runtime.processor.y.low);
-	fprintf(stream, "P    | %02x   [%c%c-%c%c%c%c%c]\n", g_runtime.processor.p.low, g_runtime.processor.p.flag.negative ? 'S' : '-',
-		g_runtime.processor.p.flag.overflow ? 'V' : '-', g_runtime.processor.p.flag.break_instruction ? 'B' : '-',
-		g_runtime.processor.p.flag.decimal_mode ? 'D' : '-', g_runtime.processor.p.flag.interrupt_disable ? 'I' : '-',
-		g_runtime.processor.p.flag.zero ? 'Z' : '-', g_runtime.processor.p.flag.carry ? 'C' : '-');
-	fprintf(stream, "PC   | %04x\n", g_runtime.processor.pc.word);
+	fprintf(stream, "SR   | %02x   [%c%c-%c%c%c%c%c]\n", g_runtime.processor.sr.low, g_runtime.processor.sr.flag.negative ? 'N' : '-',
+		g_runtime.processor.sr.flag.overflow ? 'V' : '-', g_runtime.processor.sr.flag.breakpoint ? 'B' : '-',
+		g_runtime.processor.sr.flag.decimal_mode ? 'D' : '-', g_runtime.processor.sr.flag.interrupt_disable ? 'I' : '-',
+		g_runtime.processor.sr.flag.zero ? 'Z' : '-', g_runtime.processor.sr.flag.carry ? 'C' : '-');
 	fprintf(stream, "SP   | %04x\n", g_runtime.processor.sp.word);
-	fprintf(stream, "NMI  | %04x\n", g_runtime.processor.iv[INTERRUPT_NON_MASKABLE].word);
-	fprintf(stream, "RST  | %04x\n", g_runtime.processor.iv[INTERRUPT_RESET].word);
-	fprintf(stream, "IRQ  | %04x\n", g_runtime.processor.iv[INTERRUPT_MASKABLE].word);
+	fprintf(stream, "NMI  | %04x [%c]\n", g_runtime.processor.iv[INTERRUPT_NON_MASKABLE].word,
+		g_runtime.processor.iv_state[INTERRUPT_NON_MASKABLE].pending ? 'P' : '-');
+	fprintf(stream, "RST  | %04x [%c]\n", g_runtime.processor.iv[INTERRUPT_RESET].word,
+		g_runtime.processor.iv_state[INTERRUPT_RESET].pending ? 'P' : '-');
+	fprintf(stream, "IRQ  | %04x [%c]\n", g_runtime.processor.iv[INTERRUPT_MASKABLE].word,
+		g_runtime.processor.iv_state[INTERRUPT_MASKABLE].pending ? 'P' : '-');
+	fprintf(stream, "STP  | %x\n", g_runtime.processor.stop);
+	fprintf(stream, "WAI  | %x\n", g_runtime.processor.wait);
 }
 
 #endif /* NDEBUG */
-
-uint8_t
-sb65_runtime_pop(
-	__in uint8_t *address
-	)
-{
-	return sb65_runtime_read(++(*address) + ADDRESS_STACK_LOW);
-}
-
-void
-sb65_runtime_push(
-	__in uint8_t *address,
-	__in uint8_t value
-	)
-{
-	sb65_runtime_write(ADDRESS_STACK_LOW + (*address)--, value);
-}
 
 uint8_t
 sb65_runtime_read(

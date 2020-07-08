@@ -18,6 +18,151 @@
 
 #include "./processor_type.h"
 
+static uint32_t
+sb65_processor_execute_nop(
+	__in sb65_processor_t *processor,
+	__in sb65_opcode_t opcode
+	)
+{
+	return INSTRUCTION[opcode].cycle;
+}
+
+static const sb65_instruction_cb EXECUTE[] = {
+	// 0x00
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x08
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x10
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x18
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x20
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x28
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x30
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x38
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x40
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x48
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x50
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x58
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x60
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x68
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x70
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x78
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x80
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x88
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x90
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0x98
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xa0
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xa8
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xb0
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xb8
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xc0
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xc8
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xd0
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xd8
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xe0
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xe8
+	NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL, NULL,
+	// 0xf0
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	// 0xf8
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	};
+
+static uint32_t
+sb65_processor_execute(
+	__in sb65_processor_t *processor
+	)
+{
+	uint8_t opcode = OPCODE_NOP_IMPLIED; //TODO: sb65_runtime_read(processor->pc.word++);
+
+	return EXECUTE[opcode](processor, opcode);
+}
+
+static uint32_t
+sb65_processor_service_interrupt(
+	__in sb65_processor_t *processor,
+	__in sb65_int_t interrupt
+	)
+{
+	uint32_t result = INTERRUPT_CYCLE;
+	bool breakpoint = processor->iv_state[interrupt].breakpoint, taken = false;
+
+	switch(interrupt) {
+		case INTERRUPT_NON_MASKABLE:
+		case INTERRUPT_RESET:
+			taken = true;
+			break;
+		case INTERRUPT_MASKABLE:
+			taken = (!processor->sr.flag.interrupt_disable || breakpoint);
+			break;
+		default:
+			LOG_FORMAT(LEVEL_WARNING, "Unsupported interrupt", "%i", interrupt);
+			break;
+	}
+
+	if(taken) {
+		sb65_processor_push(processor, processor->pc.low);
+		sb65_processor_push(processor, processor->pc.high);
+		sb65_processor_push(processor, processor->sr.low | (breakpoint ? (1 << FLAG_BREAKPOINT) : 0));
+		processor->pc.word = processor->iv[interrupt].word;
+		processor->sr.flag.interrupt_disable = true;
+
+		if(processor->wait) {
+			processor->wait = false;
+
+			LOG_FORMAT(LEVEL_INFORMATION, "Processor leaving wait state", "%04x", processor->pc.word);
+		}
+	}
+
+	memset(&processor->iv_state[interrupt], 0, sizeof(processor->iv_state[interrupt]));
+
+	return result;
+}
+
+static uint32_t
+sb65_processor_service(
+	__in sb65_processor_t *processor
+	)
+{
+	uint32_t result = 0;
+
+	for(sb65_int_t interrupt = 0; interrupt < INTERRUPT_MAX; ++interrupt) {
+
+		if(processor->iv_state[interrupt].pending) {
+			result += sb65_processor_service_interrupt(processor, interrupt);
+			break;
+		}
+	}
+
+	return result;
+}
+
 sb65_err_t
 sb65_processor_create(
 	__in sb65_processor_t *processor,
@@ -31,11 +176,10 @@ sb65_processor_create(
 		goto exit;
 	}
 
-	processor->p.flag.break_instruction = true;
-	processor->p.flag.unused = true;
-	processor->sp.word = ADDRESS_STACK_LOW;
 	memcpy(processor->iv, &binary->data[ADDRESS_INTERRUPT_LOW], INTERRUPT_LENGTH);
-	sb65_processor_interrupt(processor, INTERRUPT_RESET, false);
+	processor->sp.word = ADDRESS_STACK_LOW;
+	processor->sr.low = ((1 << FLAG_UNUSED) | (1 << FLAG_BREAKPOINT));
+	sb65_processor_reset(processor);
 
 	LOG_FORMAT(LEVEL_INFORMATION, "Processor created: Non-maskable=%04x, Reset=%04x, Maskable=%04x",
 		processor->iv[INTERRUPT_NON_MASKABLE].word, processor->iv[INTERRUPT_RESET].word,
@@ -63,31 +207,28 @@ void
 sb65_processor_interrupt(
 	__in sb65_processor_t *processor,
 	__in sb65_int_t interrupt,
-	__in bool set_break
+	__in bool breakpoint
 	)
 {
-	bool taken = false;
+	processor->iv_state[interrupt].pending = true;
+	processor->iv_state[interrupt].breakpoint = breakpoint;
+}
 
-	switch(interrupt) {
-		case INTERRUPT_NON_MASKABLE:
-		case INTERRUPT_RESET:
-			taken = true;
-			break;
-		case INTERRUPT_MASKABLE:
-			taken = (!processor->p.flag.interrupt_disable || set_break);
-			break;
-		default:
-			LOG_FORMAT(LEVEL_WARNING, "Unsupported interrupt", "%i", interrupt);
-			break;
-	}
+uint8_t
+sb65_processor_pull(
+	__in sb65_processor_t *processor
+	)
+{
+	return sb65_runtime_read(++processor->sp.low + ADDRESS_STACK_LOW);
+}
 
-	if(taken) {
-		sb65_runtime_push(&processor->sp.low, processor->pc.low);
-		sb65_runtime_push(&processor->sp.low, processor->pc.high);
-		sb65_runtime_push(&processor->sp.low, processor->p.low | (set_break ? (1 << FLAG_BREAK_INSTRUCTION) : 0));
-		processor->p.flag.interrupt_disable = true;
-		processor->pc.word = processor->iv[interrupt].word;
-	}
+void
+sb65_processor_push(
+	__in sb65_processor_t *processor,
+	__in uint8_t value
+	)
+{
+	sb65_runtime_write(ADDRESS_STACK_LOW + processor->sp.low--, value);
 }
 
 uint8_t
@@ -127,17 +268,42 @@ sb65_processor_read(
 	return result;
 }
 
+void
+sb65_processor_reset(
+	__in sb65_processor_t *processor
+	)
+{
+
+	if(processor->stop) {
+		processor->stop = false;
+
+		LOG_FORMAT(LEVEL_INFORMATION, "Processor leaving stop state", "%04x", processor->pc.word);
+	}
+
+	processor->cycle = 0;
+	memset(processor->iv_state, 0, sizeof(*processor->iv_state) * INTERRUPT_MAX);
+	sb65_processor_interrupt(processor, INTERRUPT_RESET, false);
+}
+
 bool
 sb65_processor_step(
 	__in sb65_processor_t *processor
 	)
 {
 	bool result;
-	uint32_t cycle;
+	uint32_t cycle = 0;
 
-	// TODO
-	cycle = 1;
-	// ---
+	if(!processor->stop) {
+		cycle += sb65_processor_service(processor);
+
+		if(!processor->wait) {
+			cycle += sb65_processor_execute(processor);
+		} else {
+			cycle += INSTRUCTION[OPCODE_NOP_IMPLIED].cycle;
+		}
+	} else {
+		cycle += INSTRUCTION[OPCODE_NOP_IMPLIED].cycle;
+	}
 
 	result = ((processor->cycle += cycle) >= CYCLES_PER_FRAME);
 	if(result) {

@@ -69,7 +69,7 @@
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
-#define VERSION_PATCH 5
+#define VERSION_PATCH 6
 
 #define ADDRESS_LENGTH(_LOW_, _HIGH_) \
 	(((_HIGH_) + 1) - (_LOW_))
