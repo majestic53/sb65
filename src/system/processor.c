@@ -24,7 +24,7 @@ sb65_processor_execute_nop(
 	__in sb65_opcode_t opcode
 	)
 {
-	return INSTRUCTION[opcode].cycle;
+	return INSTRUCTION_CYCLE(opcode).base;
 }
 
 static const sb65_instruction_cb EXECUTE[] = {
@@ -105,47 +105,6 @@ sb65_processor_execute(
 }
 
 static uint32_t
-sb65_processor_service_interrupt(
-	__in sb65_processor_t *processor,
-	__in sb65_int_t interrupt
-	)
-{
-	uint32_t result = INTERRUPT_CYCLE;
-	bool breakpoint = processor->iv_state[interrupt].breakpoint, taken = false;
-
-	switch(interrupt) {
-		case INTERRUPT_NON_MASKABLE:
-		case INTERRUPT_RESET:
-			taken = true;
-			break;
-		case INTERRUPT_MASKABLE:
-			taken = (!processor->sr.flag.interrupt_disable || breakpoint);
-			break;
-		default:
-			LOG_FORMAT(LEVEL_WARNING, "Unsupported interrupt", "%i", interrupt);
-			break;
-	}
-
-	if(taken) {
-		sb65_processor_push(processor, processor->pc.low);
-		sb65_processor_push(processor, processor->pc.high);
-		sb65_processor_push(processor, processor->sr.low | (breakpoint ? (1 << FLAG_BREAKPOINT) : 0));
-		processor->pc.word = processor->iv[interrupt].word;
-		processor->sr.flag.interrupt_disable = true;
-
-		if(processor->wait) {
-			processor->wait = false;
-
-			LOG_FORMAT(LEVEL_INFORMATION, "Processor leaving wait state", "%04x", processor->pc.word);
-		}
-	}
-
-	memset(&processor->iv_state[interrupt], 0, sizeof(processor->iv_state[interrupt]));
-
-	return result;
-}
-
-static uint32_t
 sb65_processor_service(
 	__in sb65_processor_t *processor
 	)
@@ -155,7 +114,37 @@ sb65_processor_service(
 	for(sb65_int_t interrupt = 0; interrupt < INTERRUPT_MAX; ++interrupt) {
 
 		if(processor->iv_state[interrupt].pending) {
-			result += sb65_processor_service_interrupt(processor, interrupt);
+			bool breakpoint = processor->iv_state[interrupt].breakpoint, taken = false;
+
+			switch(interrupt) {
+				case INTERRUPT_NON_MASKABLE:
+				case INTERRUPT_RESET:
+					taken = true;
+					break;
+				case INTERRUPT_MASKABLE:
+					taken = (!processor->sr.flag.interrupt_disable || breakpoint);
+					break;
+				default:
+					LOG_FORMAT(LEVEL_WARNING, "Unsupported interrupt", "%i", interrupt);
+					break;
+			}
+
+			if(taken) {
+				sb65_processor_push(processor, processor->pc.low);
+				sb65_processor_push(processor, processor->pc.high);
+				sb65_processor_push(processor, processor->sr.low | (breakpoint ? (1 << FLAG_BREAKPOINT) : 0));
+				processor->pc.word = processor->iv[interrupt].word;
+				processor->sr.flag.interrupt_disable = true;
+
+				if(processor->wait) {
+					processor->wait = false;
+
+					LOG_FORMAT(LEVEL_INFORMATION, "Processor leaving wait state", "%04x", processor->pc.word);
+				}
+			}
+
+			memset(&processor->iv_state[interrupt], 0, sizeof(processor->iv_state[interrupt]));
+			result += INTERRUPT_CYCLE;
 			break;
 		}
 	}
@@ -299,10 +288,10 @@ sb65_processor_step(
 		if(!processor->wait) {
 			cycle += sb65_processor_execute(processor);
 		} else {
-			cycle += INSTRUCTION[OPCODE_NOP_IMPLIED].cycle;
+			cycle += sb65_processor_execute_nop(processor, OPCODE_NOP_IMPLIED);
 		}
 	} else {
-		cycle += INSTRUCTION[OPCODE_NOP_IMPLIED].cycle;
+		cycle += sb65_processor_execute_nop(processor, OPCODE_NOP_IMPLIED);
 	}
 
 	result = ((processor->cycle += cycle) >= CYCLES_PER_FRAME);

@@ -21,4 +21,8 @@
 
 #include "../inc/runtime.h"
 
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 1
+#define VERSION_PATCH 7
+
 #endif /* SB65_TYPE_H_ */

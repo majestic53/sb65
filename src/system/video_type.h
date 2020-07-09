@@ -21,6 +21,11 @@
 
 #include "../../inc/system/video.h"
 #include "../../inc/runtime.h"
+#include "../common/display_type.h"
+
+#define FRAMES_PER_SECOND 60
+
+#define MS_PER_SEC 1000
 
 #define VIDEO_LENGTH ADDRESS_LENGTH(ADDRESS_VIDEO_LOW, ADDRESS_VIDEO_HIGH)
 

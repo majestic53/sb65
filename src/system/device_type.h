@@ -22,4 +22,7 @@
 #include "../../inc/system/device.h"
 #include "../../inc/runtime.h"
 
+#define ADDRESS_DEVICE_RANDOM 0x00fe
+#define ADDRESS_DEVICE_INPUT 0x00ff
+
 #endif /* SB65_SYSTEM_DEVICE_TYPE_H_ */

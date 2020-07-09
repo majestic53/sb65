@@ -118,6 +118,11 @@ sb65_video_step(
 	video->frame_end = SDL_GetTicks();
 #endif /* NDEBUG */
 
+	for(uint16_t address = 0; address < VIDEO_LENGTH; ++address) {
+		sb65_display_set_pixel(&video->display, video->video.data[address] % COLOR_MAX,
+			address % DISPLAY_WIDTH, address / DISPLAY_WIDTH);
+	}
+
 	return sb65_display_show(&video->display);
 }
 

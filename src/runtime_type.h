@@ -24,6 +24,8 @@
 #include "../inc/system/processor.h"
 #include "../inc/system/video.h"
 #include "../inc/runtime.h"
+#include "./system/processor_type.h"
+#include "./system/video_type.h"
 
 #define BINARY_LENGTH (UINT16_MAX + 1)
 

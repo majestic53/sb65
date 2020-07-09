@@ -270,11 +270,11 @@ sb65_runtime_log(
 		}
 
 		fprintf(stream, "%s", LEVEL[level]);
-		fprintf(stream, "[%s] {%u, %u (%.02f ms)} %s (%s:%s:%zu)\n", timestamp, g_runtime.frame, g_runtime.cycle, elapsed, message,
+		fprintf(stream, "[%s] {%u, %u(%.02f ms)} %s (%s:%s:%zu)\n", timestamp, g_runtime.frame, g_runtime.cycle, elapsed, message,
 			file, function, line);
 	} else {
 		fprintf(stream, "%s", LEVEL[level]);
-		fprintf(stream, "[%s] {%u, %u (%.02f ms)} (%s:%s:%zu)\n", timestamp, g_runtime.frame, g_runtime.cycle, elapsed,
+		fprintf(stream, "[%s] {%u, %u(%.02f ms)} (%s:%s:%zu)\n", timestamp, g_runtime.frame, g_runtime.cycle, elapsed,
 			file, function,line);
 	}
 
