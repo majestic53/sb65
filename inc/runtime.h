@@ -59,6 +59,12 @@ void sb65_runtime_log(
 	...
 	);
 
+void sb65_runtime_log_disassemble(
+	__in FILE *stream,
+	__in uint16_t address,
+	__in uint32_t count
+	);
+
 void sb65_runtime_log_memory(
 	__in FILE *stream,
 	__in uint16_t address,

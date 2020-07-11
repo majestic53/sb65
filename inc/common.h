@@ -67,6 +67,13 @@
 #endif /* NDEBUG */
 
 #ifndef NDEBUG
+#define LOG_DISASSEMBLE(_STREAM_, _ADDRESS_, _COUNT_) \
+	sb65_runtime_log_disassemble(_STREAM_, _ADDRESS_, _COUNT_)
+#else
+#define LOG_DISASSEMBLE(_STREAM_, _ADDRESS_, _COUNT_)
+#endif /* NDEBUG */
+
+#ifndef NDEBUG
 #define LOG_MEMORY(_STREAM_, _ADDRESS_, _OFFSET_) \
 	sb65_runtime_log_memory(_STREAM_, _ADDRESS_, _OFFSET_)
 #else
