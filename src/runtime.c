@@ -288,10 +288,70 @@ sb65_runtime_log_disassemble(
 	__in uint32_t count
 	)
 {
-	// TODO: DISASSEMBLE INSTRUCTIONS AT ADDRESS
-	(void)OPCODE_FORMAT[0];
-	(void)MODE_FORMAT[0];
-	// ---
+
+	for(uint32_t index = 0; index < count; ++index) {
+		uint32_t length = 0;
+		uint16_t base = address;
+		uint8_t data[LENGTH_MAX] = {};
+
+		fprintf(stream, "%04x |", address);
+		data[length++] = sb65_runtime_read(address++);
+
+		switch(INSTRUCTION_LENGTH(data[0])) {
+			case LENGTH_WORD:
+				data[length++] = sb65_runtime_read(address++);
+			case LENGTH_BYTE:
+				data[length++] = sb65_runtime_read(address++);
+				break;
+			default:
+				break;
+		}
+
+		fprintf(stream, "%02x", INSTRUCTION_CYCLE(data[0]).base);
+
+		if(INSTRUCTION_CYCLE(data[0]).boundary || INSTRUCTION_CYCLE(data[0]).branch
+				|| INSTRUCTION_CYCLE(data[0]).read_write_modify) {
+			fprintf(stream, "(+%02x)", INSTRUCTION_CYCLE(data[0]).boundary + INSTRUCTION_CYCLE(data[0]).branch
+				+ INSTRUCTION_CYCLE(data[0]).read_write_modify);
+		} else {
+			fprintf(stream, "     ");
+		}
+
+		fprintf(stream, " |");
+
+		for(uint32_t byte = 0; byte < LENGTH_MAX; ++byte) {
+
+			if(byte <= INSTRUCTION_LENGTH(data[0])) {
+				fprintf(stream, " %02x", data[byte]);
+			} else {
+				fprintf(stream, "   ");
+			}
+		}
+
+		fprintf(stream, " | %s ", OPCODE_FORMAT[data[0]]);
+
+		switch(INSTRUCTION_LENGTH(data[0])) {
+			case LENGTH_WORD:
+				fprintf(stream, INSTRUCTION_FORMAT(data[0]), *(uint16_t *)&data[1]);
+				break;
+			case LENGTH_BYTE:
+
+				switch(INSTRUCTION_MODE(data[0])) {
+					case MODE_RELATIVE:
+						fprintf(stream, INSTRUCTION_FORMAT(data[0]), data[1], data[1],
+							base + (int8_t)data[1]);
+						break;
+					default:
+						fprintf(stream, INSTRUCTION_FORMAT(data[0]), data[1]);
+						break;
+				}
+				break;
+			default:
+				break;
+		}
+
+		fprintf(stream, "\n");
+	}
 }
 
 void
