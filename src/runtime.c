@@ -332,7 +332,16 @@ sb65_runtime_log_disassemble(
 
 		switch(INSTRUCTION_LENGTH(data[0])) {
 			case LENGTH_WORD:
-				fprintf(stream, INSTRUCTION_FORMAT(data[0]), *(uint16_t *)&data[1]);
+
+				switch(INSTRUCTION_MODE(data[0])) {
+					case MODE_ZERO_PAGE_RELATIVE:
+						fprintf(stream, INSTRUCTION_FORMAT(data[0]), data[1], data[2], data[2],
+							base + (int8_t)data[2]);
+						break;
+					default:
+						fprintf(stream, INSTRUCTION_FORMAT(data[0]), *(uint16_t *)&data[1]);
+						break;
+				}
 				break;
 			case LENGTH_BYTE:
 

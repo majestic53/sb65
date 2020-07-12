@@ -37,21 +37,37 @@
 #define UNTITLED "Untitled"
 
 static const sb65_color_t COLOR[] = {
+	// COLOR_BLACK
 	{{ 0, 0, 0, 255, }},
+	// COLOR_WHITE
 	{{ 255, 255, 255, 255, }},
+	// COLOR_RED
 	{{ 0, 0, 255, 255, }},
+	// COLOR_CYAN
 	{{ 255, 255, 0, 255, }},
+	// COLOR_PURPLE
 	{{ 255, 0, 255, 255, }},
+	// COLOR_GREEN
 	{{ 0, 255, 0, 255, }},
+	// COLOR_BLUE
 	{{ 255, 0, 0, 255, }},
+	// COLOR_YELLOW
 	{{ 0, 255, 255, 255, }},
+	// COLOR_ORANGE
 	{{ 0, 127, 255, 255, }},
+	// COLOR_BROWN
 	{{ 0, 60, 90, 255, }},
+	// COLOR_RED_LIGHT
 	{{ 20, 60, 255, 255, }},
+	// COLOR_GREY_DARK
 	{{ 40, 40, 40, 255, }},
+	// COLOR_GREY
 	{{ 100, 100, 100, 255, }},
+	// COLOR_GREEN_LIGHT
 	{{ 0, 255, 127, 255, }},
+	// COLOR_BLUE_LIGHT
 	{{ 255, 168, 0, 255, }},
+	// COLOR_GREY_LIGHT
 	{{ 160, 160, 160, 255, }},
 	};
 

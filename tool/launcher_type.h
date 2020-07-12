@@ -47,18 +47,28 @@ enum {
 #define SCALE_DEFAULT 1
 
 static const char *FLAG[] = {
+	// FLAG_HELP
 	"-h",
+	// FLAG_PATH
 	"-p",
+	// FLAG_RANDOM
 	"-r",
+	// FLAG_SCALE
 	"-s",
+	// FLAG_VERSION
 	"-v",
 	};
 
 static const char *FLAG_DESC[] = {
+	// FLAG_HELP
 	"Display help information",
+	// FLAG_PATH
 	"Specify binary path",
+	// FLAG_RANDOM
 	"Specify random seed",
+	// FLAG_SCALE
 	"Specify display scale",
+	// FLAG_VERSION
 	"Display version information",
 	};
 
