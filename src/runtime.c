@@ -292,66 +292,61 @@ sb65_runtime_log_disassemble(
 	for(uint32_t index = 0; index < count; ++index) {
 		uint32_t length = 0;
 		uint16_t base = address;
-		uint8_t data[LENGTH_MAX] = {};
+		sb65_instruction_t instruction = {};
 
 		fprintf(stream, "%04x |", address);
-		data[length++] = sb65_runtime_read(address++);
+		instruction.raw[length++] = sb65_runtime_read(address++);
 
-		switch(INSTRUCTION_LENGTH(data[0])) {
+		switch(INSTRUCTION_LENGTH(instruction.opcode)) {
 			case LENGTH_WORD:
-				data[length++] = sb65_runtime_read(address++);
+				instruction.raw[length++] = sb65_runtime_read(address++);
 			case LENGTH_BYTE:
-				data[length++] = sb65_runtime_read(address++);
+				instruction.raw[length++] = sb65_runtime_read(address++);
 				break;
 			default:
 				break;
 		}
 
-		fprintf(stream, "%02x", INSTRUCTION_CYCLE(data[0]).base);
-
-		if(INSTRUCTION_CYCLE(data[0]).boundary || INSTRUCTION_CYCLE(data[0]).branch
-				|| INSTRUCTION_CYCLE(data[0]).read_write_modify) {
-			fprintf(stream, "(+%02x)", INSTRUCTION_CYCLE(data[0]).boundary + INSTRUCTION_CYCLE(data[0]).branch
-				+ INSTRUCTION_CYCLE(data[0]).read_write_modify);
-		} else {
-			fprintf(stream, "     ");
-		}
+		fprintf(stream, " %02x(+%02x)", INSTRUCTION_CYCLE(instruction.opcode).base,
+			INSTRUCTION_CYCLE(instruction.opcode).boundary + INSTRUCTION_CYCLE(instruction.opcode).branch
+				+ INSTRUCTION_CYCLE(instruction.opcode).read_write_modify);
 
 		fprintf(stream, " |");
 
 		for(uint32_t byte = 0; byte < LENGTH_MAX; ++byte) {
 
-			if(byte <= INSTRUCTION_LENGTH(data[0])) {
-				fprintf(stream, " %02x", data[byte]);
+			if(byte <= INSTRUCTION_LENGTH(instruction.opcode)) {
+				fprintf(stream, " %02x", instruction.raw[byte]);
 			} else {
-				fprintf(stream, "   ");
+				fprintf(stream, " --");
 			}
 		}
 
-		fprintf(stream, " | %s ", OPCODE_FORMAT[data[0]]);
+		fprintf(stream, " | %s ", OPCODE_FORMAT[instruction.opcode]);
 
-		switch(INSTRUCTION_LENGTH(data[0])) {
+		switch(INSTRUCTION_LENGTH(instruction.opcode)) {
 			case LENGTH_WORD:
 
-				switch(INSTRUCTION_MODE(data[0])) {
+				switch(INSTRUCTION_MODE(instruction.opcode)) {
 					case MODE_ZERO_PAGE_RELATIVE:
-						fprintf(stream, INSTRUCTION_FORMAT(data[0]), data[1], data[2], data[2],
-							base + (int8_t)data[2]);
+						fprintf(stream, INSTRUCTION_FORMAT(instruction.opcode), instruction.operand.low,
+							instruction.operand.high, instruction.operand.high,
+							base + (int8_t)instruction.operand.high);
 						break;
 					default:
-						fprintf(stream, INSTRUCTION_FORMAT(data[0]), *(uint16_t *)&data[1]);
+						fprintf(stream, INSTRUCTION_FORMAT(instruction.opcode), instruction.operand.word);
 						break;
 				}
 				break;
 			case LENGTH_BYTE:
 
-				switch(INSTRUCTION_MODE(data[0])) {
+				switch(INSTRUCTION_MODE(instruction.opcode)) {
 					case MODE_RELATIVE:
-						fprintf(stream, INSTRUCTION_FORMAT(data[0]), data[1], data[1],
-							base + (int8_t)data[1]);
+						fprintf(stream, INSTRUCTION_FORMAT(instruction.opcode), instruction.operand.low,
+							instruction.operand.low, base + (int8_t)instruction.operand.low);
 						break;
 					default:
-						fprintf(stream, INSTRUCTION_FORMAT(data[0]), data[1]);
+						fprintf(stream, INSTRUCTION_FORMAT(instruction.opcode), instruction.operand.low);
 						break;
 				}
 				break;

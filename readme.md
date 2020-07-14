@@ -52,9 +52,12 @@ For an example, see the launcher tool under ```tool/```
 
 #### Runtime Routines
 
-|Name    |Description    |Signature                              |
-|:-------|:--------------|:--------------------------------------|
-|sb65_run|Run environment|```int sb65_run(const sb65_conf_t *)```|
+|Name             |Description                 |Signature                          |
+|:----------------|:---------------------------|:----------------------------------|
+|sb65             |(POR) Power-on reset        |```int sb65(const sb65_conf_t *)```|
+|sb65_maskable    |(IRQ) Maskable interrupt    |```void sb65_maskable(void)```     |
+|sb65_non_maskable|(NMI) Non-maskable interrupt|```void sb65_non_maskable(void)``` |
+|sb65_reset       |(RST) Reset interrupt       |```void sb65_reset(void)```        |
 
 #### Misc. Routines
 

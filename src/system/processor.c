@@ -19,81 +19,228 @@
 #include "./processor_type.h"
 
 static uint32_t
-sb65_processor_execute_nop(
+sb65_processor_execute_brk(
 	__in sb65_processor_t *processor,
-	__in sb65_opcode_t opcode
+	__in sb65_instruction_t *instruction
 	)
 {
-	processor->pc.word += INSTRUCTION_LENGTH(opcode);
+	++processor->pc.word;
+	sb65_processor_interrupt(processor, INTERRUPT_MASKABLE, true);
 
-	return INSTRUCTION_CYCLE(opcode).base;
+	return 0;
+}
+
+static uint32_t
+sb65_processor_execute_clc(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->sr.flag.carry = false;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_cld(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->sr.flag.decimal_mode = false;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_cli(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->sr.flag.interrupt_disable = false;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_clv(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->sr.flag.overflow = false;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_nop(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->pc.word += INSTRUCTION_LENGTH(instruction->opcode);
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_sec(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->sr.flag.carry = true;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_sed(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->sr.flag.decimal_mode = true;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_sei(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->sr.flag.interrupt_disable = true;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_stp(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	LOG_FORMAT(LEVEL_INFORMATION, "Processor entering stop state", "%04x", processor->pc.word);
+
+	processor->stop = true;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_wai(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	LOG_FORMAT(LEVEL_INFORMATION, "Processor entering wait state", "%04x", processor->pc.word);
+
+	processor->wait = true;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
 }
 
 static const sb65_instruction_cb EXECUTE[] = {
 	// 0x00
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	sb65_processor_execute_brk, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x08
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x10
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x18
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	sb65_processor_execute_clc, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x20
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x28
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x30
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x38
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	sb65_processor_execute_sec, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x40
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL,
+	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x48
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x50
-	NULL, NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x58
-	NULL, NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL,
+	sb65_processor_execute_cli, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x60
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x68
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x70
-	NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, sb65_processor_execute_nop, NULL,
+	NULL, NULL, NULL, NULL,
 	// 0x78
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	sb65_processor_execute_sei, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x80
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x88
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x90
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0x98
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0xa0
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0xa8
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0xb0
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0xb8
-	NULL, NULL, NULL, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	sb65_processor_execute_clv, NULL, NULL, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0xc0
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0xc8
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_wai,
+	NULL, NULL, NULL, NULL,
 	// 0xd0
-	NULL, NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0xd8
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	sb65_processor_execute_cld, NULL, NULL, sb65_processor_execute_stp,
+	NULL, NULL, NULL, NULL,
 	// 0xe0
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0xe8
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL, NULL,
+	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	NULL, NULL, NULL, NULL,
 	// 0xf0
-	NULL, NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0xf8
-	NULL, NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop, NULL, NULL, NULL,
+	sb65_processor_execute_sed, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, NULL, NULL, NULL,
 	};
 
 static uint32_t
@@ -101,9 +248,16 @@ sb65_processor_execute(
 	__in sb65_processor_t *processor
 	)
 {
-	uint8_t opcode = OPCODE_NOP_IMPLIED; //TODO: sb65_runtime_read(processor->pc.word++);
+	sb65_instruction_t instruction = {};
 
-	return EXECUTE[opcode](processor, opcode);
+	//instruction.opcode = sb65_runtime_read(processor->pc.word++);
+
+// TODO: DEBUG
+	instruction.opcode = OPCODE_NOP_IMPLIED;
+	processor->pc.word++;
+// ---
+
+	return EXECUTE[instruction.opcode](processor, &instruction);
 }
 
 static uint32_t
@@ -136,6 +290,7 @@ sb65_processor_service(
 				sb65_processor_push(processor, processor->pc.high);
 				sb65_processor_push(processor, processor->sr.low | (breakpoint ? (1 << FLAG_BREAKPOINT) : 0));
 				processor->pc.word = processor->iv[interrupt].word;
+				processor->sr.flag.decimal_mode = false;
 				processor->sr.flag.interrupt_disable = true;
 
 				if(processor->wait) {
@@ -290,10 +445,10 @@ sb65_processor_step(
 		if(!processor->wait) {
 			cycle += sb65_processor_execute(processor);
 		} else {
-			cycle += sb65_processor_execute_nop(processor, OPCODE_NOP_IMPLIED);
+			cycle += INSTRUCTION_CYCLE(OPCODE_NOP_IMPLIED).base;
 		}
 	} else {
-		cycle += sb65_processor_execute_nop(processor, OPCODE_NOP_IMPLIED);
+		cycle += INSTRUCTION_CYCLE(OPCODE_NOP_IMPLIED).base;
 	}
 
 	result = ((processor->cycle += cycle) >= CYCLES_PER_FRAME);

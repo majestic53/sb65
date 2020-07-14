@@ -367,9 +367,26 @@ static const uint32_t MODE_LENGTH[] = {
 	LENGTH_WORD,
 	};
 
+enum {
+	INSTRUCTION_OPCODE = 0,
+	INSTRUCTION_OPERAND_LOW,
+	INSTRUCTION_OPERAND_HIGH,
+	INSTRUCTION_MAX,
+};
+
+typedef union {
+
+	struct {
+		uint8_t opcode;
+		sb65_register_t operand;
+	};
+
+	uint8_t raw[INSTRUCTION_MAX];
+} __attribute__((packed)) sb65_instruction_t;
+
 typedef uint32_t (*sb65_instruction_cb)(
 	__in sb65_processor_t *processor,
-	__in sb65_opcode_t opcode
+	__in sb65_instruction_t *instruction
 	);
 
 #endif /* SB65_SYSTEM_PROCESSOR_TYPE_H_ */

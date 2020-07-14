@@ -35,9 +35,15 @@ typedef struct {
 extern "C" {
 #endif /* __cplusplus */
 
+int sb65(const sb65_conf_t *);
+
 const char *sb65_error(void);
 
-int sb65_run(const sb65_conf_t *);
+void sb65_maskable(void);
+
+void sb65_non_maskable(void);
+
+void sb65_reset(void);
 
 void sb65_version(sb65_ver_t *);
 

@@ -18,18 +18,36 @@
 
 #include "./sb65_type.h"
 
+int
+sb65(
+	__in const sb65_conf_t *configuration
+	)
+{
+	return sb65_runtime(configuration);
+}
+
 const char *
 sb65_error(void)
 {
 	return sb65_runtime_error();
 }
 
-int
-sb65_run(
-	__in const sb65_conf_t *configuration
-	)
+void
+sb65_maskable(void)
 {
-	return sb65_runtime(configuration);
+	sb65_runtime_interrupt(INTERRUPT_MASKABLE);
+}
+
+void
+sb65_non_maskable(void)
+{
+	sb65_runtime_interrupt(INTERRUPT_NON_MASKABLE);
+}
+
+void
+sb65_reset(void)
+{
+	sb65_runtime_interrupt(INTERRUPT_RESET);
 }
 
 void

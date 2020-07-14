@@ -137,7 +137,7 @@ sb65_launch(
 		sb65_print_version(false);
 	} else {
 
-		if((result = sb65_run(&g_launcher.configuration)) != ERROR_SUCCESS) {
+		if((result = sb65(&g_launcher.configuration)) != ERROR_SUCCESS) {
 			fprintf(stderr, "Error: %s\n", sb65_error());
 			goto exit;
 		}

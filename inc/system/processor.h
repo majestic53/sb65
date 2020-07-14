@@ -50,7 +50,7 @@ typedef union {
 	};
 
 	uint16_t word;
-} sb65_register_t;
+} __attribute__((packed)) sb65_register_t;
 
 typedef struct {
 	uint32_t cycle;
