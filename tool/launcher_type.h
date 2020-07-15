@@ -19,8 +19,13 @@
 #ifndef SB65_TOOL_LAUNCHER_TYPE_H_
 #define SB65_TOOL_LAUNCHER_TYPE_H_
 
+#include <ctype.h>
 #include <getopt.h>
-#include "../inc/common.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "../inc/sb65.h"
 
 #define TITLE "SB65"

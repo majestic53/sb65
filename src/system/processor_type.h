@@ -29,6 +29,21 @@
 #define ADDRESS_INTERRUPT_MASKABLE_HIGH 0xffff
 #define ADDRESS_INTERRUPT_MASKABLE_LOW 0xfffe
 
+#define BIT_HIGH (CHAR_BIT - 1)
+#define BIT_LOW 0
+
+#define BIT(_BIT_) \
+	(1 << (_BIT_))
+
+#define BIT_CHECK(_VALUE_, _BIT_) \
+	(((_VALUE_) & BIT(_BIT_)) == BIT(_BIT_))
+
+#define BIT_CLEAR(_VALUE_, _BIT_) \
+	((_VALUE_) &= ~BIT(_BIT_))
+
+#define BIT_SET(_VALUE_, _BIT_) \
+	((_VALUE_) |= BIT(_BIT_))
+
 #define CYCLES_PER_FRAME 500
 
 #define INTERRUPT_CYCLE 7

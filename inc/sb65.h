@@ -19,15 +19,31 @@
 #ifndef SB65_H_
 #define SB65_H_
 
+/****************************
+ * SB65 types
+ ****************************/
+
+/**
+ * Configuration struct
+ */
 typedef struct {
+	/* Binary path */
 	const char *path;
+	/* Display scale */
 	int scale;
+	/* Device seed */
 	int seed;
 } sb65_conf_t;
 
+/**
+ * Version struct
+ */
 typedef struct {
+	/* Major version */
 	int major;
+	/* Minor version */
 	int minor;
+	/* Patch version */
 	int patch;
 } sb65_ver_t;
 
@@ -35,16 +51,42 @@ typedef struct {
 extern "C" {
 #endif /* __cplusplus */
 
-int sb65(const sb65_conf_t *);
+/****************************
+ * SB65 runtime routines
+ ****************************/
 
-const char *sb65_error(void);
+/**
+ * Setup sandbox environment
+ * @param Const pointer to configuration struct
+ * @return EXIT_SUCCESS on success
+ */
+int sb65_setup(const sb65_conf_t *);
 
-void sb65_maskable(void);
-
-void sb65_non_maskable(void);
-
+/**
+ * Reset sandbox environment
+ */
 void sb65_reset(void);
 
+/**
+ * Interrupt sandbox environment
+ * @param Maskable interrupt
+ */
+void sb65_interrupt(bool);
+
+/****************************
+ * SB65 misc. routines
+ ****************************/
+
+/**
+ * Retrieve error string
+ * @return Const pointer to error string
+ */
+const char *sb65_error(void);
+
+/**
+ * Retrieve version
+ * @param Pointer to version struct
+ */
 void sb65_version(sb65_ver_t *);
 
 #ifdef __cplusplus

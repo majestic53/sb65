@@ -22,7 +22,7 @@ static sb65_launcher_t g_launcher = {};
 
 static void
 sb65_print_version(
-	__in bool verbose
+	bool verbose
 	)
 {
 	sb65_ver_t version = {};
@@ -42,7 +42,7 @@ sb65_print_version(
 
 static void
 sb65_print_usage(
-	__in bool verbose
+	bool verbose
 	)
 {
 
@@ -63,20 +63,19 @@ sb65_print_usage(
 	}
 }
 
-static sb65_err_t
+static int
 sb65_launch(
-	__in int argc,
-	__in char *argv[]
+	int argc,
+	char *argv[]
 	)
 {
-	int option;
-	sb65_err_t result = ERROR_SUCCESS;
+	int option, result = EXIT_SUCCESS;
 
 	memset(&g_launcher, 0, sizeof(g_launcher));
 	g_launcher.configuration.scale = SCALE_DEFAULT;
 
 	if(argc < OPTIONS_MIN) {
-		result = ERROR_INVALID_PARAMETER;
+		result = EXIT_FAILURE;
 		sb65_print_usage(true);
 		goto exit;
 	}
@@ -123,10 +122,10 @@ sb65_launch(
 
 				fprintf(stdout, "\n");
 				sb65_print_usage(false);
-				result = ERROR_INVALID_PARAMETER;
+				result = EXIT_FAILURE;
 				goto exit;
 			default:
-				result = ERROR_INVALID_PARAMETER;
+				result = EXIT_FAILURE;
 				goto exit;
 		}
 	}
@@ -137,7 +136,7 @@ sb65_launch(
 		sb65_print_version(false);
 	} else {
 
-		if((result = sb65(&g_launcher.configuration)) != ERROR_SUCCESS) {
+		if((result = sb65_setup(&g_launcher.configuration)) != EXIT_SUCCESS) {
 			fprintf(stderr, "Error: %s\n", sb65_error());
 			goto exit;
 		}
@@ -149,9 +148,9 @@ exit:
 
 int
 main(
-	__in int argc,
-	__in char *argv[]
+	int argc,
+	char *argv[]
 	)
 {
-	return (sb65_launch(argc, argv) == ERROR_SUCCESS) ? EXIT_SUCCESS : EXIT_FAILURE;
+	return sb65_launch(argc, argv);
 }

@@ -39,7 +39,7 @@ $ make <BUILD>
 
 Where COMPILER corrisponds to either ```clang```, ```gcc``` or the compiler of your choice.
 
-Where BUILD corrisponds to either ```rel``` (release) or ```dbg``` (debug). If no BUILD argument is specified, a release build will be created.
+Where BUILD corrisponds to either ```release``` (release) or ```debug``` (debug). If no BUILD argument is specified, a release build will be created.
 
 Usage
 =
@@ -52,12 +52,11 @@ For an example, see the launcher tool under ```tool/```
 
 #### Runtime Routines
 
-|Name             |Description                 |Signature                          |
-|:----------------|:---------------------------|:----------------------------------|
-|sb65             |(POR) Power-on reset        |```int sb65(const sb65_conf_t *)```|
-|sb65_maskable    |(IRQ) Maskable interrupt    |```void sb65_maskable(void)```     |
-|sb65_non_maskable|(NMI) Non-maskable interrupt|```void sb65_non_maskable(void)``` |
-|sb65_reset       |(RST) Reset interrupt       |```void sb65_reset(void)```        |
+|Name          |Description                  |Signature                                |
+|:-------------|:----------------------------|:----------------------------------------|
+|sb65_setup    |Setup sandbox environment    |```int sb65_setup(const sb65_conf_t *)```|
+|sb65_reset    |Reset sandbox environment    |```void sb65_reset(void)```              |
+|sb65_interrupt|Interrupt sandbox environment|```void sb65_interrupt(bool)```          |
 
 #### Misc. Routines
 

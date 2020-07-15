@@ -154,27 +154,6 @@ exit:
 	return result;
 }
 
-sb65_err_t
-sb65_runtime(
-	__in const sb65_conf_t *configuration
-	)
-{
-	sb65_err_t result = ERROR_SUCCESS;
-
-	if(!configuration) {
-		result = SET_ERROR(ERROR_INVALID_PARAMETER, "Configuration=%p", configuration);
-		goto exit;
-	}
-
-	if((result = sb65_runtime_create(configuration)) == ERROR_SUCCESS) {
-		result = sb65_runtime_run();
-		sb65_runtime_destroy();
-	}
-
-exit:
-	return result;
-}
-
 const char *
 sb65_runtime_error(void)
 {
@@ -270,11 +249,11 @@ sb65_runtime_log(
 		}
 
 		fprintf(stream, "%s", LEVEL[level]);
-		fprintf(stream, "[%s] {%u, %u(%.02f ms)} %s (%s:%s:%zu)\n", timestamp, g_runtime.frame, g_runtime.cycle, elapsed, message,
+		fprintf(stream, "[%s] {%u fm, %u(%.02f ms)} %s (%s:%s:%zu)\n", timestamp, g_runtime.frame, g_runtime.cycle, elapsed, message,
 			file, function, line);
 	} else {
 		fprintf(stream, "%s", LEVEL[level]);
-		fprintf(stream, "[%s] {%u, %u(%.02f ms)} (%s:%s:%zu)\n", timestamp, g_runtime.frame, g_runtime.cycle, elapsed,
+		fprintf(stream, "[%s] {%u fm, %u(%.02f ms)} (%s:%s:%zu)\n", timestamp, g_runtime.frame, g_runtime.cycle, elapsed,
 			file, function,line);
 	}
 
@@ -453,6 +432,27 @@ sb65_runtime_read(
 			break;
 	}
 
+	return result;
+}
+
+sb65_err_t
+sb65_runtime_setup(
+	__in const sb65_conf_t *configuration
+	)
+{
+	sb65_err_t result = ERROR_SUCCESS;
+
+	if(!configuration) {
+		result = SET_ERROR(ERROR_INVALID_PARAMETER, "Configuration=%p", configuration);
+		goto exit;
+	}
+
+	if((result = sb65_runtime_create(configuration)) == ERROR_SUCCESS) {
+		result = sb65_runtime_run();
+		sb65_runtime_destroy();
+	}
+
+exit:
 	return result;
 }
 

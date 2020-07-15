@@ -23,6 +23,6 @@
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
-#define VERSION_PATCH 11
+#define VERSION_PATCH 12
 
 #endif /* SB65_TYPE_H_ */

@@ -26,10 +26,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-sb65_err_t sb65_runtime(
-	__in const sb65_conf_t *configuration
-	);
-
 const char *sb65_runtime_error(void);
 
 sb65_err_t sb65_runtime_error_set(
@@ -79,6 +75,10 @@ void sb65_runtime_log_processor(
 
 uint8_t sb65_runtime_read(
 	__in uint16_t address
+	);
+
+sb65_err_t sb65_runtime_setup(
+	__in const sb65_conf_t *configuration
 	);
 
 void sb65_runtime_write(
