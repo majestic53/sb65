@@ -20,6 +20,10 @@
 
 static char g_title[TITLE_MAX] = {};
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 sb65_err_t
 sb65_display_create(
 	__in sb65_display_t *display,
@@ -167,3 +171,7 @@ sb65_display_show(
 exit:
 	return result;
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

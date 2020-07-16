@@ -16,52 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "./sb65_type.h"
+#include <check.h>
+#include "../../inc/common.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-const char *
-sb65_error(void)
-{
-	return sb65_runtime_error();
-}
-
-void
-sb65_interrupt(
-	__in bool maskable
-	)
-{
-	sb65_runtime_interrupt(maskable ? INTERRUPT_MASKABLE : INTERRUPT_NON_MASKABLE);
-}
-
-void
-sb65_reset(void)
-{
-	sb65_runtime_interrupt(INTERRUPT_RESET);
-}
-
-int
-sb65_setup(
-	__in const sb65_conf_t *configuration
-	)
-{
-	return ((sb65_runtime_setup(configuration) != ERROR_SUCCESS) ? EXIT_FAILURE : EXIT_SUCCESS);
-}
-
-void
-sb65_version(
-	__in sb65_ver_t *version
-	)
-{
-
-	if(version) {
-		version->major = VERSION_MAJOR;
-		version->minor = VERSION_MINOR;
-		version->patch = VERSION_PATCH;
-	}
-}
+// TODO
 
 #ifdef __cplusplus
 }

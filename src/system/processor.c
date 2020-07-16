@@ -18,6 +18,10 @@
 
 #include "./processor_type.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 static uint32_t
 sb65_processor_execute_brk(
 	__in sb65_processor_t *processor,
@@ -83,7 +87,7 @@ sb65_processor_execute_dex(
 	)
 {
 	--processor->x.low;
-	processor->sr.flag.negative = BIT_CHECK(processor->x.low, BIT_HIGH);
+	processor->sr.flag.negative = MASK_CHECK(processor->x.low, MSB);
 	processor->sr.flag.zero = !processor->x.low;
 
 	return INSTRUCTION_CYCLE(instruction->opcode).base;
@@ -96,7 +100,7 @@ sb65_processor_execute_dey(
 	)
 {
 	--processor->y.low;
-	processor->sr.flag.negative = BIT_CHECK(processor->y.low, BIT_HIGH);
+	processor->sr.flag.negative = MASK_CHECK(processor->y.low, MSB);
 	processor->sr.flag.zero = !processor->y.low;
 
 	return INSTRUCTION_CYCLE(instruction->opcode).base;
@@ -109,7 +113,7 @@ sb65_processor_execute_inx(
 	)
 {
 	++processor->x.low;
-	processor->sr.flag.negative = BIT_CHECK(processor->x.low, BIT_HIGH);
+	processor->sr.flag.negative = MASK_CHECK(processor->x.low, MSB);
 	processor->sr.flag.zero = !processor->x.low;
 
 	return INSTRUCTION_CYCLE(instruction->opcode).base;
@@ -122,7 +126,7 @@ sb65_processor_execute_iny(
 	)
 {
 	++processor->y.low;
-	processor->sr.flag.negative = BIT_CHECK(processor->y.low, BIT_HIGH);
+	processor->sr.flag.negative = MASK_CHECK(processor->y.low, MSB);
 	processor->sr.flag.zero = !processor->y.low;
 
 	return INSTRUCTION_CYCLE(instruction->opcode).base;
@@ -192,7 +196,7 @@ sb65_processor_execute_tax(
 	)
 {
 	processor->x.low = processor->ac.low;
-	processor->sr.flag.negative = BIT_CHECK(processor->x.low, BIT_HIGH);
+	processor->sr.flag.negative = MASK_CHECK(processor->x.low, MSB);
 	processor->sr.flag.zero = !processor->x.low;
 
 	return INSTRUCTION_CYCLE(instruction->opcode).base;
@@ -205,7 +209,7 @@ sb65_processor_execute_tay(
 	)
 {
 	processor->y.low = processor->ac.low;
-	processor->sr.flag.negative = BIT_CHECK(processor->y.low, BIT_HIGH);
+	processor->sr.flag.negative = MASK_CHECK(processor->y.low, MSB);
 	processor->sr.flag.zero = !processor->y.low;
 
 	return INSTRUCTION_CYCLE(instruction->opcode).base;
@@ -218,7 +222,7 @@ sb65_processor_execute_tsx(
 	)
 {
 	processor->x.low = processor->sp.low;
-	processor->sr.flag.negative = BIT_CHECK(processor->x.low, BIT_HIGH);
+	processor->sr.flag.negative = MASK_CHECK(processor->x.low, MSB);
 	processor->sr.flag.zero = !processor->x.low;
 
 	return INSTRUCTION_CYCLE(instruction->opcode).base;
@@ -231,7 +235,7 @@ sb65_processor_execute_txa(
 	)
 {
 	processor->ac.low = processor->x.low;
-	processor->sr.flag.negative = BIT_CHECK(processor->ac.low, BIT_HIGH);
+	processor->sr.flag.negative = MASK_CHECK(processor->ac.low, MSB);
 	processor->sr.flag.zero = !processor->ac.low;
 
 	return INSTRUCTION_CYCLE(instruction->opcode).base;
@@ -255,7 +259,7 @@ sb65_processor_execute_tya(
 	)
 {
 	processor->ac.low = processor->y.low;
-	processor->sr.flag.negative = BIT_CHECK(processor->ac.low, BIT_HIGH);
+	processor->sr.flag.negative = MASK_CHECK(processor->ac.low, MSB);
 	processor->sr.flag.zero = !processor->ac.low;
 
 	return INSTRUCTION_CYCLE(instruction->opcode).base;
@@ -418,7 +422,7 @@ sb65_processor_service(
 			if(taken) {
 				sb65_processor_push(processor, processor->pc.low);
 				sb65_processor_push(processor, processor->pc.high);
-				sb65_processor_push(processor, processor->sr.low | (breakpoint ? BIT(FLAG_BREAKPOINT) : 0));
+				sb65_processor_push(processor, processor->sr.low | (breakpoint ? MASK(FLAG_BREAKPOINT) : 0));
 				processor->pc.word = processor->iv[interrupt].word;
 				processor->sr.flag.interrupt_disable = true;
 
@@ -625,3 +629,7 @@ sb65_processor_write(
 			break;
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

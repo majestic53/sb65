@@ -18,6 +18,10 @@
 
 #include "./buffer_type.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 sb65_err_t
 sb65_buffer_create(
 	__in sb65_buffer_t *buffer,
@@ -120,3 +124,7 @@ exit:
 
 	return result;
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

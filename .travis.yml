@@ -12,7 +12,10 @@ addons:
   apt:
     packages:
       - libsdl2-dev
+      - check
 
 script:
   - make debug
+  - make debug-test
   - make release
+  - make release-test

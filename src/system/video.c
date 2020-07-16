@@ -18,6 +18,10 @@
 
 #include "./video_type.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 sb65_err_t
 sb65_video_create(
 	__in sb65_video_t *video,
@@ -143,3 +147,7 @@ sb65_video_write(
 			break;
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

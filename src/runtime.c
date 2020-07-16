@@ -19,8 +19,11 @@
 #include "./runtime_type.h"
 
 static sb65_error_t g_error = {};
-
 static sb65_runtime_t g_runtime = {};
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 static void
 sb65_runtime_destroy(void)
@@ -483,3 +486,7 @@ sb65_runtime_write(
 			break;
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

@@ -18,6 +18,10 @@
 
 #include "./device_type.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 sb65_err_t
 sb65_device_create(
 	__in sb65_device_t *device,
@@ -112,3 +116,7 @@ sb65_device_write(
 			break;
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

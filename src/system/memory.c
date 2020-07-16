@@ -18,6 +18,10 @@
 
 #include "./memory_type.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 sb65_err_t
 sb65_memory_create(
 	__in sb65_memory_t *memory,
@@ -126,3 +130,7 @@ sb65_memory_write(
 			break;
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
