@@ -19,6 +19,7 @@ BIN=sb65
 DIR_BIN=../bin/
 DIR_BIN_LIB=../bin/lib/
 DIR_BUILD=../build/
+DIR_BUILD_TOOL=../build/tool/
 DIR_ROOT=./
 
 FLAGS=-march=native -std=c11 -Wall -Werror
@@ -27,7 +28,7 @@ FLAGS_LIB=-lSDL2 -lSDL2main
 
 LIB=libsb65.a
 
-all: begin build link
+all: begin init build link
 
 ### SETUP ###
 
@@ -37,12 +38,15 @@ begin:
 	@echo 'BUILDING SB65 TOOL'
 	@echo '============================================'
 
+init:
+	mkdir -p $(DIR_BUILD_TOOL)
+
 ### LAUNCHER ###
 
 link:
 	@echo ''
 	@echo '--- LINKING LAUNCHER -----------------------'
-	$(CC) $(FLAGS) $(BUILD_FLAGS) $(DIR_BUILD)tool_launcher.o $(DIR_BIN_LIB)$(LIB) $(FLAGS_LIB) -o $(DIR_BIN)$(BIN) $(FLAGS_BIN)
+	$(CC) $(FLAGS) $(BUILD_FLAGS) $(DIR_BUILD_TOOL)tool_launcher.o $(DIR_BIN_LIB)$(LIB) $(FLAGS_LIB) -o $(DIR_BIN)$(BIN) $(FLAGS_BIN)
 	@echo '--- DONE -----------------------------------'
 
 build: build_tool
@@ -52,4 +56,4 @@ build: build_tool
 build_tool: tool_launcher.o
 
 tool_launcher.o: $(DIR_ROOT)launcher.c
-	$(CC) $(FLAGS) $(BUILD_FLAGS) -c $(DIR_ROOT)launcher.c -o $(DIR_BUILD)tool_launcher.o
+	$(CC) $(FLAGS) $(BUILD_FLAGS) -c $(DIR_ROOT)launcher.c -o $(DIR_BUILD_TOOL)tool_launcher.o

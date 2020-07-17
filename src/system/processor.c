@@ -22,6 +22,83 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/* TODO
+
+static uint16_t
+sb65_processor_effective_address(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	sb65_mode_t mode;
+	uint16_t result = 0;
+
+	switch((mode = INSTRUCTION_MODE(instruction->opcode))) {
+		case MODE_ABSOLUTE:
+			// TODO
+			break;
+		case MODE_ABSOLUTE_INDIRECT:
+			// TODO
+			break;
+		case MODE_ABSOLUTE_INDIRECT_X:
+			// TODO
+			break;
+		case MODE_ABSOLUTE_X:
+			// TODO
+			break;
+		case MODE_ABSOLUTE_Y:
+			// TODO
+			break;
+		case MODE_ACCUMULATOR:
+			// TODO
+			break;
+		case MODE_IMMEDIATE:
+			// TODO
+			break;
+		case MODE_IMPLIED:
+			// TODO
+			break;
+		case MODE_RELATIVE:
+			// TODO
+			break;
+		case MODE_STACK:
+			// TODO
+			break;
+		case MODE_UNUSED:
+			// TODO
+			break;
+		case MODE_ZERO_PAGE:
+			// TODO
+			break;
+		case MODE_ZERO_PAGE_INDIRECT:
+			// TODO
+			break;
+		case MODE_ZERO_PAGE_INDIRECT_Y:
+			// TODO
+			break;
+		case MODE_ZERO_PAGE_INDIRECT_X:
+			// TODO
+			break;
+		case MODE_ZERO_PAGE_RELATIVE:
+			// TODO
+			break;
+		case MODE_ZERO_PAGE_X:
+			// TODO
+			break;
+		case MODE_ZERO_PAGE_Y:
+			// TODO
+			break;
+		default:
+			LOG_FORMAT(LEVEL_WARNING, "Unsupported mode", "%i", mode);
+
+			break;
+	}
+
+	return result;
+}
+
+--- */
+
 static uint32_t
 sb65_processor_execute_brk(
 	__in sb65_processor_t *processor,

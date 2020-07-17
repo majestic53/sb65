@@ -23,7 +23,67 @@
 extern "C" {
 #endif /* __cplusplus */
 
+sb65_err_t
+sb65_runtime_error_set(
+	__in sb65_err_t error,
+#ifndef NDEBUG
+	__in const char *file,
+	__in const char *function,
+	__in size_t line,
+#endif /* NDEBUG */
+	__in const char *format,
+	...
+	)
+{
+	// TODO
+	return error;
+	// ---
+}
+
+#ifndef NDEBUG
+
+void
+sb65_runtime_log(
+	__in FILE *stream,
+	__in sb65_lvl_t level,
+	__in const char *file,
+	__in const char *function,
+	__in size_t line,
+	__in const char *format,
+	...
+	)
+{
+	// TODO
+}
+
+#endif /* NDEBUG */
+
+uint8_t
+sb65_runtime_read(
+	__in uint16_t address
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+void
+sb65_runtime_write(
+	__in uint16_t address,
+	__in uint8_t value
+	)
+{
+	// TODO
+}
+
 // TODO
+
+int
+main(void)
+{
+	return EXIT_SUCCESS;
+}
 
 #ifdef __cplusplus
 }

@@ -20,6 +20,10 @@
 
 static sb65_launcher_t g_launcher = {};
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 static void
 sb65_print_version(
 	bool verbose
@@ -154,3 +158,7 @@ main(
 {
 	return sb65_launch(argc, argv);
 }
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

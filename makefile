@@ -18,10 +18,9 @@ DIR_BIN=./bin/
 DIR_BIN_INC=./bin/inc/
 DIR_BIN_LIB=./bin/lib/
 DIR_BUILD=./build/
-DIR_BUILD_TEST=./build/test/
 DIR_ROOT=./
 DIR_SRC=./src/
-DIR_SRC_TEST=./src//test/
+DIR_SRC_TEST=./src/test/
 DIR_TOOL=./tool/
 
 BUILD_DBG=BUILD_FLAGS=-g
@@ -37,11 +36,11 @@ test: release-test
 
 debug: begin clean init lib_debug tool_debug uninit
 
-debug-test: begin clean init lib_debug lib_debug_test tool_debug uninit
+debug-test: begin clean init lib_debug test_debug tool_debug uninit
 
 release: begin clean init lib_release tool_release uninit
 
-release-test: begin clean init lib_release lib_release_test tool_release uninit
+release-test: begin clean init lib_release test_release tool_release uninit
 
 ### SETUP ###
 
@@ -57,7 +56,7 @@ clean:
 init:
 	mkdir -p $(DIR_BIN_INC)
 	mkdir -p $(DIR_BIN_LIB)
-	mkdir -p $(DIR_BUILD_TEST)
+	mkdir -p $(DIR_BUILD)
 
 uninit:
 	@echo ''
@@ -72,20 +71,10 @@ lib_debug:
 	cd $(DIR_SRC) && make $(BUILD_DBG) build -j$(SLOTS)
 	cd $(DIR_SRC) && make archive
 
-lib_debug_test:
-	@echo ''
-	cd $(DIR_SRC_TEST) && make $(BUILD_DBG) build -j$(SLOTS)
-	cd $(DIR_SRC_TEST) && make archive
-
 lib_release:
 	@echo ''
 	cd $(DIR_SRC) && make $(BUILD_REL) build -j$(SLOTS)
 	cd $(DIR_SRC) && make archive
-
-lib_release_test:
-	@echo ''
-	cd $(DIR_SRC_TEST) && make $(BUILD_REL) build -j$(SLOTS)
-	cd $(DIR_SRC_TEST) && make archive
 
 ### TOOL ###
 
@@ -96,6 +85,16 @@ tool_debug:
 tool_release:
 	@echo ''
 	cd $(DIR_TOOL) && make $(BUILD_REL)
+
+### TEST ###
+
+test_debug:
+	@echo ''
+	cd $(DIR_SRC_TEST) && make $(BUILD_DBG)
+
+test_release:
+	@echo ''
+	cd $(DIR_SRC_TEST) && make $(BUILD_REL)
 
 ### MISC ###
 

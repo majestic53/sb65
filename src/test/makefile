@@ -14,37 +14,58 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-DIR_BUILD=../../build/test/
-DIR_SRC=./
-DIR_SRC_SYSTEM=./system/
+BIN=test_
+
+DIR_BUILD=../../build/
+DIR_BUILD_TEST=../../build/test/
+DIR_ROOT=./
+DIR_SYSTEM=./system/
 
 FLAGS=-march=native -std=c11 -Wall -Werror
+FLAGS_BIN=
+FLAGS_LIB=-lcheck
 
-LIB=libsb65_test.a
+TEST_FLAGS=
 
-all: build archive
+all: begin init build link run
 
-### LIBRARY ###
+### SETUP ###
 
-archive:
+begin:
 	@echo ''
-	@echo '--- ARCHIVING OBJECTS ----------------------'
-	ar rcs $(DIR_BUILD)$(LIB) $(DIR_BUILD)base_sanity.o \
-		$(DIR_BUILD)system_processor.o
+	@echo '============================================'
+	@echo 'BUILDING SB65 TEST'
+	@echo '============================================'
+
+init:
+	mkdir -p $(DIR_BUILD_TEST)
+
+### LAUNCHER ###
+
+link:
+	@echo ''
+	@echo '--- LINKING LAUNCHER -----------------------'
+	$(CC) $(FLAGS) $(BUILD_FLAGS) $(DIR_BUILD_TEST)test_system_processor.o $(DIR_BUILD)system_processor.o $(FLAGS_LIB) -o $(DIR_BUILD_TEST)$(BIN)system_processor $(FLAGS_BIN)
 	@echo '--- DONE -----------------------------------'
 
-build: build_base build_system
-
-### BASE ###
-
-build_base: base_sanity.o
-
-base_sanity.o: $(DIR_SRC)sanity.c
-	$(CC) $(FLAGS) $(BUILD_FLAGS) -c $(DIR_SRC)sanity.c -o $(DIR_BUILD)base_sanity.o
+build: build_test_system
 
 ### SYSTEM ###
 
-build_system: system_processor.o
+build_test_system: test_system_processor.o
 
-system_processor.o: $(DIR_SRC_SYSTEM)processor.c
-	$(CC) $(FLAGS) $(BUILD_FLAGS) -c $(DIR_SRC_SYSTEM)processor.c -o $(DIR_BUILD)system_processor.o
+test_system_processor.o: $(DIR_SYSTEM)processor.c
+	$(CC) $(FLAGS) $(BUILD_FLAGS) -c $(DIR_SYSTEM)processor.c -o $(DIR_BUILD_TEST)test_system_processor.o
+
+### RUN ###
+
+run:
+	@echo ''
+	@echo '--- RUNNING TEST ---------------------------'
+	@cd $(DIR_BUILD_TEST) && if ./$(DIR_BUILD_TEST)$(BIN)system_processor $(TEST_FLAGS); \
+	then \
+		echo '--- PASSED ---------------------------------'; \
+	else \
+		echo '--- FAILED ---------------------------------'; \
+		exit 1; \
+	fi
