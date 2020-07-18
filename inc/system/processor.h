@@ -85,15 +85,6 @@ void sb65_processor_interrupt(
 	__in bool breakpoint
 	);
 
-uint8_t sb65_processor_pull(
-	__in sb65_processor_t *processor
-	);
-
-void sb65_processor_push(
-	__in sb65_processor_t *processor,
-	__in uint8_t value
-	);
-
 uint8_t sb65_processor_read(
 	__in const sb65_processor_t *processor,
 	__in uint16_t address

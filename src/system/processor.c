@@ -22,16 +22,62 @@
 extern "C" {
 #endif /* __cplusplus */
 
-/* TODO
+static uint8_t
+sb65_processor_pull(
+	__in sb65_processor_t *processor
+	)
+{
+	return sb65_runtime_read(++processor->sp.low + ADDRESS_STACK_LOW);
+}
+
+/*static uint16_t
+sb65_processor_pull_word(
+	__in sb65_processor_t *processor
+	)
+{
+	return ((sb65_runtime_read(++processor->sp.low + ADDRESS_STACK_LOW) << CHAR_BIT)
+		| sb65_runtime_read(++processor->sp.low + ADDRESS_STACK_LOW));
+}*/
+
+static void
+sb65_processor_push(
+	__in sb65_processor_t *processor,
+	__in uint8_t value
+	)
+{
+	sb65_runtime_write(ADDRESS_STACK_LOW + processor->sp.low--, value);
+}
+
+static void
+sb65_processor_push_word(
+	__in sb65_processor_t *processor,
+	__in uint16_t value
+	)
+{
+	sb65_runtime_write(ADDRESS_STACK_LOW + processor->sp.low--, value);
+	sb65_runtime_write(ADDRESS_STACK_LOW + processor->sp.low--, value >> CHAR_BIT);
+}
+
+/*static uint16_t
+sb65_processor_read_word(
+	__in uint16_t address
+	)
+{
+	return (sb65_runtime_read(address) | (sb65_runtime_read(address + 1) << CHAR_BIT));
+}
 
 static uint16_t
-sb65_processor_effective_address(
+sb65_processor_address(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in sb65_instruction_t *instruction,
+	__out bool *boundary
 	)
 {
 	sb65_mode_t mode;
-	uint16_t result = 0;
+	sb65_register_t indirect = {}, result = {};
+
+	boundary = false;
+	indirect.word = instruction->operand.word;
 
 	switch((mode = INSTRUCTION_MODE(instruction->opcode))) {
 		case MODE_ABSOLUTE:
@@ -49,37 +95,20 @@ sb65_processor_effective_address(
 		case MODE_ABSOLUTE_Y:
 			// TODO
 			break;
-		case MODE_ACCUMULATOR:
-			// TODO
-			break;
-		case MODE_IMMEDIATE:
-			// TODO
-			break;
-		case MODE_IMPLIED:
-			// TODO
-			break;
 		case MODE_RELATIVE:
 			// TODO
 			break;
-		case MODE_STACK:
-			// TODO
-			break;
-		case MODE_UNUSED:
-			// TODO
-			break;
 		case MODE_ZERO_PAGE:
+		case MODE_ZERO_PAGE_RELATIVE:
 			// TODO
 			break;
 		case MODE_ZERO_PAGE_INDIRECT:
 			// TODO
 			break;
-		case MODE_ZERO_PAGE_INDIRECT_Y:
-			// TODO
-			break;
 		case MODE_ZERO_PAGE_INDIRECT_X:
 			// TODO
 			break;
-		case MODE_ZERO_PAGE_RELATIVE:
+		case MODE_ZERO_PAGE_INDIRECT_Y:
 			// TODO
 			break;
 		case MODE_ZERO_PAGE_X:
@@ -94,10 +123,8 @@ sb65_processor_effective_address(
 			break;
 	}
 
-	return result;
-}
-
---- */
+	return result.word;
+}*/
 
 static uint32_t
 sb65_processor_execute_brk(
@@ -216,6 +243,100 @@ sb65_processor_execute_nop(
 	)
 {
 	processor->pc.word += INSTRUCTION_LENGTH(instruction->opcode);
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_pha(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	sb65_processor_push(processor, processor->ac.low);
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_php(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	sb65_processor_push(processor, processor->sr.low);
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_phx(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	sb65_processor_push(processor, processor->x.low);
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_phy(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	sb65_processor_push(processor, processor->y.low);
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_pla(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->ac.low = sb65_processor_pull(processor);
+	processor->sr.flag.negative = MASK_CHECK(processor->ac.low, MSB);
+	processor->sr.flag.zero = !processor->ac.low;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_plp(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->sr.low = sb65_processor_pull(processor);
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_plx(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->x.low = sb65_processor_pull(processor);
+	processor->sr.flag.negative = MASK_CHECK(processor->x.low, MSB);
+	processor->sr.flag.zero = !processor->x.low;
+
+	return INSTRUCTION_CYCLE(instruction->opcode).base;
+}
+
+static uint32_t
+sb65_processor_execute_ply(
+	__in sb65_processor_t *processor,
+	__in sb65_instruction_t *instruction
+	)
+{
+	processor->y.low = sb65_processor_pull(processor);
+	processor->sr.flag.negative = MASK_CHECK(processor->y.low, MSB);
+	processor->sr.flag.zero = !processor->y.low;
 
 	return INSTRUCTION_CYCLE(instruction->opcode).base;
 }
@@ -360,7 +481,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_brk, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x08
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_php, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x10
 	NULL, NULL, NULL, sb65_processor_execute_nop,
@@ -372,7 +493,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x28
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_plp, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x30
 	NULL, NULL, NULL, sb65_processor_execute_nop,
@@ -384,25 +505,25 @@ static const sb65_instruction_cb EXECUTE[] = {
 	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x48
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_pha, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x50
 	NULL, NULL, NULL, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x58
-	sb65_processor_execute_cli, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_cli, NULL, sb65_processor_execute_phy, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x60
 	NULL, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x68
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_pla, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x70
 	NULL, NULL, sb65_processor_execute_nop, NULL,
 	NULL, NULL, NULL, NULL,
 	// 0x78
-	sb65_processor_execute_sei, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_sei, NULL, sb65_processor_execute_ply, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x80
 	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
@@ -438,7 +559,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	NULL, NULL, NULL, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0xd8
-	sb65_processor_execute_cld, NULL, NULL, sb65_processor_execute_stp,
+	sb65_processor_execute_cld, NULL, sb65_processor_execute_phx, sb65_processor_execute_stp,
 	NULL, NULL, NULL, NULL,
 	// 0xe0
 	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
@@ -450,7 +571,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	NULL, NULL, NULL, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0xf8
-	sb65_processor_execute_sed, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_sed, NULL, sb65_processor_execute_plx, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	};
 
@@ -497,8 +618,7 @@ sb65_processor_service(
 			}
 
 			if(taken) {
-				sb65_processor_push(processor, processor->pc.low);
-				sb65_processor_push(processor, processor->pc.high);
+				sb65_processor_push_word(processor, processor->pc.word);
 				sb65_processor_push(processor, processor->sr.low | (breakpoint ? MASK(FLAG_BREAKPOINT) : 0));
 				processor->pc.word = processor->iv[interrupt].word;
 				processor->sr.flag.interrupt_disable = true;
@@ -574,23 +694,6 @@ sb65_processor_interrupt(
 {
 	processor->iv_state[interrupt].pending = true;
 	processor->iv_state[interrupt].breakpoint = breakpoint;
-}
-
-uint8_t
-sb65_processor_pull(
-	__in sb65_processor_t *processor
-	)
-{
-	return sb65_runtime_read(++processor->sp.low + ADDRESS_STACK_LOW);
-}
-
-void
-sb65_processor_push(
-	__in sb65_processor_t *processor,
-	__in uint8_t value
-	)
-{
-	sb65_runtime_write(ADDRESS_STACK_LOW + processor->sp.low--, value);
 }
 
 uint8_t
