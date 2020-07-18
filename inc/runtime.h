@@ -77,6 +77,10 @@ uint8_t sb65_runtime_read(
 	__in uint16_t address
 	);
 
+uint16_t sb65_runtime_read_word(
+	__in uint16_t address
+	);
+
 sb65_err_t sb65_runtime_setup(
 	__in const sb65_conf_t *configuration
 	);
@@ -84,6 +88,11 @@ sb65_err_t sb65_runtime_setup(
 void sb65_runtime_write(
 	__in uint16_t address,
 	__in uint8_t value
+	);
+
+void sb65_runtime_write_word(
+	__in uint16_t address,
+	__in uint16_t value
 	);
 
 #ifdef __cplusplus

@@ -68,8 +68,27 @@ sb65_runtime_read(
 	// ---
 }
 
+uint8_t
+sb65_runtime_read_word(
+	__in uint16_t address
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
 void
 sb65_runtime_write(
+	__in uint16_t address,
+	__in uint8_t value
+	)
+{
+	// TODO
+}
+
+void
+sb65_runtime_write_word(
 	__in uint16_t address,
 	__in uint8_t value
 	)
@@ -82,7 +101,9 @@ sb65_runtime_write(
 int
 main(void)
 {
+	// TODO
 	return EXIT_SUCCESS;
+	// ---
 }
 
 #ifdef __cplusplus

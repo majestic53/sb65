@@ -113,9 +113,25 @@ static const char *MODE_FORMAT[] = {
 	"",
 	// MODE_RELATIVE
 	"%02x(%i) [%04x]",
-	// MODE_STACK
+	// MODE_STACK_0
 	"",
-	// MODE_UNUSED
+	// MODE_STACK_1
+	"",
+	// MODE_STACK_2
+	"",
+	// MODE_STACK_3
+	"",
+	// MODE_UNUSED_0
+	"",
+	// MODE_UNUSED_1
+	"",
+	// MODE_UNUSED_2
+	"",
+	// MODE_UNUSED_3
+	"",
+	// MODE_UNUSED_4
+	"",
+	// MODE_UNUSED_5
 	"",
 	// MODE_ZERO_PAGE
 	"%02x",

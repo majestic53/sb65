@@ -30,14 +30,18 @@ sb65_processor_pull(
 	return sb65_runtime_read(++processor->sp.low + ADDRESS_STACK_LOW);
 }
 
-/*static uint16_t
+static uint16_t
 sb65_processor_pull_word(
 	__in sb65_processor_t *processor
 	)
 {
-	return ((sb65_runtime_read(++processor->sp.low + ADDRESS_STACK_LOW) << CHAR_BIT)
-		| sb65_runtime_read(++processor->sp.low + ADDRESS_STACK_LOW));
-}*/
+	uint16_t result;
+
+	result = (sb65_runtime_read(++processor->sp.low + ADDRESS_STACK_LOW) << CHAR_BIT);
+	result |= sb65_runtime_read(++processor->sp.low + ADDRESS_STACK_LOW);
+
+	return result;
+}
 
 static void
 sb65_processor_push(
@@ -58,30 +62,21 @@ sb65_processor_push_word(
 	sb65_runtime_write(ADDRESS_STACK_LOW + processor->sp.low--, value >> CHAR_BIT);
 }
 
-/*static uint16_t
-sb65_processor_read_word(
-	__in uint16_t address
-	)
-{
-	return (sb65_runtime_read(address) | (sb65_runtime_read(address + 1) << CHAR_BIT));
-}
-
 static uint16_t
 sb65_processor_address(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction,
+	__in const sb65_instruction_t *instruction,
+	__in sb65_mode_t mode,
 	__out bool *boundary
 	)
 {
-	sb65_mode_t mode;
-	sb65_register_t indirect = {}, result = {};
+	sb65_register_t result = {};
 
-	boundary = false;
-	indirect.word = instruction->operand.word;
+	*boundary = false;
 
-	switch((mode = INSTRUCTION_MODE(instruction->opcode))) {
+	switch(mode) {
 		case MODE_ABSOLUTE:
-			// TODO
+			result.word = instruction->operand.word;
 			break;
 		case MODE_ABSOLUTE_INDIRECT:
 			// TODO
@@ -124,17 +119,18 @@ sb65_processor_address(
 	}
 
 	return result.word;
-}*/
+}
 
 static uint32_t
 sb65_processor_execute_brk(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	LOG_FORMAT(LEVEL_INFORMATION, "Processor breakpoint", "%04x", processor->pc.word);
 
-	++processor->pc.word;
 	sb65_processor_interrupt(processor, INTERRUPT_MASKABLE, true);
 
 	return 0;
@@ -143,337 +139,434 @@ sb65_processor_execute_brk(
 static uint32_t
 sb65_processor_execute_clc(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->sr.flag.carry = false;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_cld(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->sr.flag.decimal_mode = false;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_cli(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->sr.flag.interrupt_disable = false;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_clv(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->sr.flag.overflow = false;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_dex(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	--processor->x.low;
 	processor->sr.flag.negative = MASK_CHECK(processor->x.low, MSB);
 	processor->sr.flag.zero = !processor->x.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_dey(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	--processor->y.low;
 	processor->sr.flag.negative = MASK_CHECK(processor->y.low, MSB);
 	processor->sr.flag.zero = !processor->y.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_inx(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	++processor->x.low;
 	processor->sr.flag.negative = MASK_CHECK(processor->x.low, MSB);
 	processor->sr.flag.zero = !processor->x.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_iny(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	++processor->y.low;
 	processor->sr.flag.negative = MASK_CHECK(processor->y.low, MSB);
 	processor->sr.flag.zero = !processor->y.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
+}
+
+static uint32_t
+sb65_processor_execute_jsr(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	bool boundary;
+
+	sb65_processor_push_word(processor, processor->pc.word);
+	processor->pc.word = sb65_processor_address(processor, instruction, mode, &boundary);
+
+	return (cycle->base + cycle->read_write_modify);
 }
 
 static uint32_t
 sb65_processor_execute_nop(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
-	processor->pc.word += INSTRUCTION_LENGTH(instruction->opcode);
-
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_pha(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	sb65_processor_push(processor, processor->ac.low);
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_php(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	sb65_processor_push(processor, processor->sr.low);
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_phx(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	sb65_processor_push(processor, processor->x.low);
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_phy(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	sb65_processor_push(processor, processor->y.low);
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_pla(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->ac.low = sb65_processor_pull(processor);
 	processor->sr.flag.negative = MASK_CHECK(processor->ac.low, MSB);
 	processor->sr.flag.zero = !processor->ac.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_plp(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->sr.low = sb65_processor_pull(processor);
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_plx(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->x.low = sb65_processor_pull(processor);
 	processor->sr.flag.negative = MASK_CHECK(processor->x.low, MSB);
 	processor->sr.flag.zero = !processor->x.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_ply(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->y.low = sb65_processor_pull(processor);
 	processor->sr.flag.negative = MASK_CHECK(processor->y.low, MSB);
 	processor->sr.flag.zero = !processor->y.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
+}
+
+static uint32_t
+sb65_processor_execute_rti(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	processor->sr.low = sb65_processor_pull(processor);
+	processor->pc.word = sb65_processor_pull_word(processor);
+
+	return cycle->base;
+}
+
+static uint32_t
+sb65_processor_execute_rts(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	processor->pc.word = sb65_processor_pull_word(processor);
+
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_sec(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->sr.flag.carry = true;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_sed(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->sr.flag.decimal_mode = true;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_sei(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->sr.flag.interrupt_disable = true;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_stp(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	LOG_FORMAT(LEVEL_INFORMATION, "Processor entering stop state", "%04x", processor->pc.word);
 
 	processor->stop = true;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_tax(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->x.low = processor->ac.low;
 	processor->sr.flag.negative = MASK_CHECK(processor->x.low, MSB);
 	processor->sr.flag.zero = !processor->x.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_tay(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->y.low = processor->ac.low;
 	processor->sr.flag.negative = MASK_CHECK(processor->y.low, MSB);
 	processor->sr.flag.zero = !processor->y.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_tsx(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->x.low = processor->sp.low;
 	processor->sr.flag.negative = MASK_CHECK(processor->x.low, MSB);
 	processor->sr.flag.zero = !processor->x.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_txa(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->ac.low = processor->x.low;
 	processor->sr.flag.negative = MASK_CHECK(processor->ac.low, MSB);
 	processor->sr.flag.zero = !processor->ac.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_txs(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->sp.low = processor->x.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_tya(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	processor->ac.low = processor->y.low;
 	processor->sr.flag.negative = MASK_CHECK(processor->ac.low, MSB);
 	processor->sr.flag.zero = !processor->ac.low;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static uint32_t
 sb65_processor_execute_wai(
 	__in sb65_processor_t *processor,
-	__in sb65_instruction_t *instruction
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
 	)
 {
 	LOG_FORMAT(LEVEL_INFORMATION, "Processor entering wait state", "%04x", processor->pc.word);
 
 	processor->wait = true;
 
-	return INSTRUCTION_CYCLE(instruction->opcode).base;
+	return cycle->base;
 }
 
 static const sb65_instruction_cb EXECUTE[] = {
@@ -490,7 +583,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_clc, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x20
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_jsr, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x28
 	sb65_processor_execute_plp, NULL, NULL, sb65_processor_execute_nop,
@@ -502,7 +595,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_sec, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x40
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_rti, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x48
 	sb65_processor_execute_pha, NULL, NULL, sb65_processor_execute_nop,
@@ -514,7 +607,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_cli, NULL, sb65_processor_execute_phy, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x60
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_rts, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x68
 	sb65_processor_execute_pla, NULL, NULL, sb65_processor_execute_nop,
@@ -580,16 +673,26 @@ sb65_processor_execute(
 	__in sb65_processor_t *processor
 	)
 {
+	uint32_t length;
 	sb65_instruction_t instruction = {};
 
-	//instruction.opcode = sb65_runtime_read(processor->pc.word++);
+	instruction.opcode = sb65_runtime_read(processor->pc.word++);
 
-// TODO: DEBUG
-	instruction.opcode = OPCODE_NOP_IMPLIED;
-	processor->pc.word++;
-// ---
+	switch((length = INSTRUCTION_LENGTH(instruction.opcode))) {
+		case LENGTH_WORD:
+			instruction.operand.word = sb65_runtime_read_word(processor->pc.word);
+			break;
+		case LENGTH_BYTE:
+			instruction.operand.low = sb65_runtime_read(processor->pc.word);
+			break;
+		default:
+			break;
+	}
 
-	return EXECUTE[instruction.opcode](processor, &instruction);
+	processor->pc.word += length;
+
+	return EXECUTE[instruction.opcode](processor, &instruction, &INSTRUCTION_CYCLE(instruction.opcode),
+		INSTRUCTION_MODE(instruction.opcode));
 }
 
 static uint32_t
@@ -622,11 +725,8 @@ sb65_processor_service(
 				sb65_processor_push(processor, processor->sr.low | (breakpoint ? MASK(FLAG_BREAKPOINT) : 0));
 				processor->pc.word = processor->iv[interrupt].word;
 				processor->sr.flag.interrupt_disable = true;
-
-				if(breakpoint) {
-					processor->sr.flag.decimal_mode = false;
-					processor->sr.flag.unused = true;
-				}
+				processor->sr.flag.decimal_mode = false;
+				processor->sr.flag.unused = true;
 
 				if(processor->wait) {
 					processor->wait = false;
