@@ -65,52 +65,57 @@ sb65_processor_push_word(
 static uint16_t
 sb65_processor_address(
 	__in sb65_processor_t *processor,
-	__in const sb65_instruction_t *instruction,
+	__in const sb65_register_t *address,
 	__in sb65_mode_t mode,
 	__out bool *boundary
 	)
 {
-	sb65_register_t result = {};
+	sb65_register_t indirect, result = {};
 
 	*boundary = false;
 
 	switch(mode) {
 		case MODE_ABSOLUTE:
-			result.word = instruction->operand.word;
+			result.word = address->word;
 			break;
 		case MODE_ABSOLUTE_INDIRECT:
-			// TODO
+			result.word = sb65_runtime_read_word(address->word, false);
 			break;
 		case MODE_ABSOLUTE_INDIRECT_X:
-			// TODO
+			result.word = sb65_runtime_read_word(address->word + processor->x.low, false);
 			break;
 		case MODE_ABSOLUTE_X:
-			// TODO
+			result.word = (address->word + processor->x.low);
+			*boundary = (result.high != address->high);
 			break;
 		case MODE_ABSOLUTE_Y:
-			// TODO
+			result.word = (address->word + processor->y.low);
+			*boundary = (result.high != address->high);
 			break;
 		case MODE_RELATIVE:
-			// TODO
+			result.word = (processor->pc.word + (int8_t)address->low);
+			*boundary = (result.high != processor->pc.high);
 			break;
 		case MODE_ZERO_PAGE:
 		case MODE_ZERO_PAGE_RELATIVE:
-			// TODO
+			result.low = address->low;
 			break;
 		case MODE_ZERO_PAGE_INDIRECT:
-			// TODO
+			result.word = sb65_runtime_read_word(address->low, true);
 			break;
 		case MODE_ZERO_PAGE_INDIRECT_X:
-			// TODO
+			result.word = sb65_runtime_read_word(address->low + processor->x.low, true);
 			break;
 		case MODE_ZERO_PAGE_INDIRECT_Y:
-			// TODO
+			indirect.word = sb65_runtime_read_word(address->low, true);
+			result.word = (indirect.word + processor->y.low);
+			*boundary = (result.high != indirect.high);
 			break;
 		case MODE_ZERO_PAGE_X:
-			// TODO
+			result.low = (address->low + processor->x.low);
 			break;
 		case MODE_ZERO_PAGE_Y:
-			// TODO
+			result.low = (address->low + processor->y.low);
 			break;
 		default:
 			LOG_FORMAT(LEVEL_WARNING, "Unsupported mode", "%i", mode);
@@ -259,7 +264,7 @@ sb65_processor_execute_jsr(
 	bool boundary;
 
 	sb65_processor_push_word(processor, processor->pc.word);
-	processor->pc.word = sb65_processor_address(processor, instruction, mode, &boundary);
+	processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
 
 	return (cycle->base + cycle->read_write_modify);
 }
@@ -680,7 +685,7 @@ sb65_processor_execute(
 
 	switch((length = INSTRUCTION_LENGTH(instruction.opcode))) {
 		case LENGTH_WORD:
-			instruction.operand.word = sb65_runtime_read_word(processor->pc.word);
+			instruction.operand.word = sb65_runtime_read_word(processor->pc.word, false);
 			break;
 		case LENGTH_BYTE:
 			instruction.operand.low = sb65_runtime_read(processor->pc.word);

@@ -440,10 +440,22 @@ sb65_runtime_read(
 
 uint16_t
 sb65_runtime_read_word(
-	__in uint16_t address
+	__in uint16_t address,
+	__in bool wrap
 	)
 {
-	return (sb65_runtime_read(address) | (sb65_runtime_read(address + 1) << CHAR_BIT));
+	sb65_register_t high, low;
+
+	low.word = address;
+
+	if(wrap && (low.low == UINT8_MAX)) {
+		high.high = low.high;
+		high.low = 0;
+	} else {
+		high.word = (address + 1);
+	}
+
+	return (sb65_runtime_read(low.word) | (sb65_runtime_read(high.word) << CHAR_BIT));
 }
 
 sb65_err_t
@@ -498,11 +510,23 @@ sb65_runtime_write(
 void
 sb65_runtime_write_word(
 	__in uint16_t address,
-	__in uint16_t value
+	__in uint16_t value,
+	__in bool wrap
 	)
 {
-	sb65_runtime_write(address, value);
-	sb65_runtime_write(address + 1, value >> CHAR_BIT);
+	sb65_register_t high, low;
+
+	low.word = address;
+
+	if(wrap && (low.low == UINT8_MAX)) {
+		high.high = low.high;
+		high.low = 0;
+	} else {
+		high.word = (address + 1);
+	}
+
+	sb65_runtime_write(low.word, value);
+	sb65_runtime_write(high.word, value >> CHAR_BIT);
 }
 
 #ifdef __cplusplus
