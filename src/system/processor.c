@@ -70,7 +70,7 @@ sb65_processor_address(
 	__out bool *boundary
 	)
 {
-	sb65_register_t indirect, result = {};
+	sb65_register_t indirect = {}, result = {};
 
 	*boundary = false;
 
@@ -127,6 +127,141 @@ sb65_processor_address(
 }
 
 static uint32_t
+sb65_processor_execute_bcc(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint32_t result = cycle->base;
+
+	if(!processor->sr.flag.carry) {
+		bool boundary = false;
+
+		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+		result += (cycle->branch + (boundary ? cycle->boundary : 0));
+	}
+
+	return result;
+}
+
+static uint32_t
+sb65_processor_execute_bcs(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint32_t result = cycle->base;
+
+	if(processor->sr.flag.carry) {
+		bool boundary = false;
+
+		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+		result += (cycle->branch + (boundary ? cycle->boundary : 0));
+	}
+
+	return result;
+}
+
+static uint32_t
+sb65_processor_execute_beq(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint32_t result = cycle->base;
+
+	if(processor->sr.flag.zero) {
+		bool boundary = false;
+
+		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+		result += (cycle->branch + (boundary ? cycle->boundary : 0));
+	}
+
+	return result;
+}
+
+static uint32_t
+sb65_processor_execute_bmi(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint32_t result = cycle->base;
+
+	if(processor->sr.flag.negative) {
+		bool boundary = false;
+
+		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+		result += (cycle->branch + (boundary ? cycle->boundary : 0));
+	}
+
+	return result;
+}
+
+static uint32_t
+sb65_processor_execute_bne(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint32_t result = cycle->base;
+
+	if(!processor->sr.flag.zero) {
+		bool boundary = false;
+
+		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+		result += (cycle->branch + (boundary ? cycle->boundary : 0));
+	}
+
+	return result;
+}
+
+static uint32_t
+sb65_processor_execute_bpl(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint32_t result = cycle->base;
+
+	if(!processor->sr.flag.negative) {
+		bool boundary = false;
+
+		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+		result += (cycle->branch + (boundary ? cycle->boundary : 0));
+	}
+
+	return result;
+}
+
+static uint32_t
+sb65_processor_execute_bra(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	bool boundary = false;
+
+	processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+
+	return (cycle->base + cycle->branch + (boundary ? cycle->boundary : 0));
+}
+
+static uint32_t
 sb65_processor_execute_brk(
 	__in sb65_processor_t *processor,
 	__in const sb65_instruction_t *instruction,
@@ -139,6 +274,46 @@ sb65_processor_execute_brk(
 	sb65_processor_interrupt(processor, INTERRUPT_MASKABLE, true);
 
 	return 0;
+}
+
+static uint32_t
+sb65_processor_execute_bvc(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint32_t result = cycle->base;
+
+	if(!processor->sr.flag.overflow) {
+		bool boundary = false;
+
+		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+		result += (cycle->branch + (boundary ? cycle->boundary : 0));
+	}
+
+	return result;
+}
+
+static uint32_t
+sb65_processor_execute_bvs(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint32_t result = cycle->base;
+
+	if(processor->sr.flag.overflow) {
+		bool boundary = false;
+
+		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+		result += (cycle->branch + (boundary ? cycle->boundary : 0));
+	}
+
+	return result;
 }
 
 static uint32_t
@@ -582,7 +757,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_php, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x10
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_bpl, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x18
 	sb65_processor_execute_clc, NULL, NULL, sb65_processor_execute_nop,
@@ -594,7 +769,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_plp, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x30
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_bmi, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x38
 	sb65_processor_execute_sec, NULL, NULL, sb65_processor_execute_nop,
@@ -606,7 +781,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_pha, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x50
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_bvc, NULL, NULL, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x58
 	sb65_processor_execute_cli, NULL, sb65_processor_execute_phy, sb65_processor_execute_nop,
@@ -618,19 +793,19 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_pla, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x70
-	NULL, NULL, sb65_processor_execute_nop, NULL,
+	sb65_processor_execute_bvs, NULL, sb65_processor_execute_nop, NULL,
 	NULL, NULL, NULL, NULL,
 	// 0x78
 	sb65_processor_execute_sei, NULL, sb65_processor_execute_ply, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x80
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_bra, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x88
 	sb65_processor_execute_dey, NULL, sb65_processor_execute_txa, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x90
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_bcc, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x98
 	sb65_processor_execute_tya, NULL, sb65_processor_execute_txs, sb65_processor_execute_nop,
@@ -642,7 +817,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_tay, NULL, sb65_processor_execute_tax, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0xb0
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_bcs, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0xb8
 	sb65_processor_execute_clv, NULL, sb65_processor_execute_tsx, sb65_processor_execute_nop,
@@ -654,7 +829,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_iny, NULL, sb65_processor_execute_dex, sb65_processor_execute_wai,
 	NULL, NULL, NULL, NULL,
 	// 0xd0
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_bne, NULL, NULL, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0xd8
 	sb65_processor_execute_cld, NULL, sb65_processor_execute_phx, sb65_processor_execute_stp,
@@ -666,7 +841,7 @@ static const sb65_instruction_cb EXECUTE[] = {
 	sb65_processor_execute_inx, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0xf0
-	NULL, NULL, NULL, sb65_processor_execute_nop,
+	sb65_processor_execute_beq, NULL, NULL, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0xf8
 	sb65_processor_execute_sed, NULL, sb65_processor_execute_plx, sb65_processor_execute_nop,

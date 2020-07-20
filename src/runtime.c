@@ -444,7 +444,7 @@ sb65_runtime_read_word(
 	__in bool wrap
 	)
 {
-	sb65_register_t high, low;
+	sb65_register_t high = {}, low = {};
 
 	low.word = address;
 
@@ -514,7 +514,7 @@ sb65_runtime_write_word(
 	__in bool wrap
 	)
 {
-	sb65_register_t high, low;
+	sb65_register_t high = {}, low = {};
 
 	low.word = address;
 
