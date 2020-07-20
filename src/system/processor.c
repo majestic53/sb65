@@ -97,7 +97,6 @@ sb65_processor_address(
 			*boundary = (result.high != processor->pc.high);
 			break;
 		case MODE_ZERO_PAGE:
-		case MODE_ZERO_PAGE_RELATIVE:
 			result.low = address->low;
 			break;
 		case MODE_ZERO_PAGE_INDIRECT:
@@ -110,6 +109,10 @@ sb65_processor_address(
 			indirect.word = sb65_runtime_read_word(address->low, true);
 			result.word = (indirect.word + processor->y.low);
 			*boundary = (result.high != indirect.high);
+			break;
+		case MODE_ZERO_PAGE_RELATIVE:
+			result.word = (processor->pc.word + (int8_t)address->low);
+			*boundary = (result.high != processor->pc.high);
 			break;
 		case MODE_ZERO_PAGE_X:
 			result.low = (address->low + processor->x.low);
@@ -124,6 +127,48 @@ sb65_processor_address(
 	}
 
 	return result.word;
+}
+
+static uint32_t
+sb65_processor_execute_bbr(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint32_t result = cycle->base;
+
+	if(!MASK_CHECK(sb65_runtime_read(instruction->operand.high),
+			MASK((instruction->opcode - OPCODE_BBR0_ZERO_PAGE_RELATIVE) / (OPCODE_BBR0_ZERO_PAGE_RELATIVE + 1)))) {
+		bool boundary = false;
+
+		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+		result += (cycle->branch + (boundary ? cycle->boundary : 0));
+	}
+
+	return result;
+}
+
+static uint32_t
+sb65_processor_execute_bbs(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint32_t result = cycle->base;
+
+	if(MASK_CHECK(sb65_runtime_read(instruction->operand.high),
+			MASK((instruction->opcode - OPCODE_BBS0_ZERO_PAGE_RELATIVE) / (OPCODE_BBR0_ZERO_PAGE_RELATIVE + 1)))) {
+		bool boundary = false;
+
+		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+		result += (cycle->branch + (boundary ? cycle->boundary : 0));
+	}
+
+	return result;
 }
 
 static uint32_t
@@ -755,97 +800,97 @@ static const sb65_instruction_cb EXECUTE[] = {
 	NULL, NULL, NULL, NULL,
 	// 0x08
 	sb65_processor_execute_php, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbr,
 	// 0x10
 	sb65_processor_execute_bpl, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x18
 	sb65_processor_execute_clc, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbr,
 	// 0x20
 	sb65_processor_execute_jsr, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x28
 	sb65_processor_execute_plp, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbr,
 	// 0x30
 	sb65_processor_execute_bmi, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x38
 	sb65_processor_execute_sec, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbr,
 	// 0x40
 	sb65_processor_execute_rti, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x48
 	sb65_processor_execute_pha, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbr,
 	// 0x50
 	sb65_processor_execute_bvc, NULL, NULL, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0x58
 	sb65_processor_execute_cli, NULL, sb65_processor_execute_phy, sb65_processor_execute_nop,
-	sb65_processor_execute_nop, NULL, NULL, NULL,
+	sb65_processor_execute_nop, NULL, NULL, sb65_processor_execute_bbr,
 	// 0x60
 	sb65_processor_execute_rts, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x68
 	sb65_processor_execute_pla, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbr,
 	// 0x70
 	sb65_processor_execute_bvs, NULL, sb65_processor_execute_nop, NULL,
 	NULL, NULL, NULL, NULL,
 	// 0x78
 	sb65_processor_execute_sei, NULL, sb65_processor_execute_ply, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbr,
 	// 0x80
 	sb65_processor_execute_bra, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x88
 	sb65_processor_execute_dey, NULL, sb65_processor_execute_txa, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbs,
 	// 0x90
 	sb65_processor_execute_bcc, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0x98
 	sb65_processor_execute_tya, NULL, sb65_processor_execute_txs, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbs,
 	// 0xa0
 	NULL, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0xa8
 	sb65_processor_execute_tay, NULL, sb65_processor_execute_tax, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbs,
 	// 0xb0
 	sb65_processor_execute_bcs, NULL, NULL, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0xb8
 	sb65_processor_execute_clv, NULL, sb65_processor_execute_tsx, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbs,
 	// 0xc0
 	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0xc8
 	sb65_processor_execute_iny, NULL, sb65_processor_execute_dex, sb65_processor_execute_wai,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbs,
 	// 0xd0
 	sb65_processor_execute_bne, NULL, NULL, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0xd8
 	sb65_processor_execute_cld, NULL, sb65_processor_execute_phx, sb65_processor_execute_stp,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbs,
 	// 0xe0
 	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
 	NULL, NULL, NULL, NULL,
 	// 0xe8
 	sb65_processor_execute_inx, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, sb65_processor_execute_bbs,
 	// 0xf0
 	sb65_processor_execute_beq, NULL, NULL, sb65_processor_execute_nop,
 	sb65_processor_execute_nop, NULL, NULL, NULL,
 	// 0xf8
 	sb65_processor_execute_sed, NULL, sb65_processor_execute_plx, sb65_processor_execute_nop,
-	sb65_processor_execute_nop, NULL, NULL, NULL,
+	sb65_processor_execute_nop, NULL, NULL, sb65_processor_execute_bbs,
 	};
 
 static uint32_t
