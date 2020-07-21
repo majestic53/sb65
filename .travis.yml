@@ -12,7 +12,6 @@ addons:
   apt:
     packages:
       - libsdl2-dev
-      - check
 
 script:
   - make debug

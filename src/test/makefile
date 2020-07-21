@@ -23,7 +23,7 @@ DIR_SYSTEM=./system/
 
 FLAGS=-march=native -std=c11 -Wall -Werror
 FLAGS_BIN=
-FLAGS_LIB=-lcheck
+FLAGS_LIB=
 
 TEST_FLAGS=
 

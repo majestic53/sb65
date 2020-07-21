@@ -16,8 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <check.h>
+#include "../../../inc/common/processor.h"
 #include "../../../inc/system/processor.h"
+
+static sb65_err_t g_error = ERROR_SUCCESS;
+static uint8_t g_memory[UINT16_MAX + 1] = {};
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,9 +38,7 @@ sb65_runtime_error_set(
 	...
 	)
 {
-	// TODO
-	return error;
-	// ---
+	return (g_error = error);
 }
 
 #ifndef NDEBUG
@@ -53,7 +54,7 @@ sb65_runtime_log(
 	...
 	)
 {
-	// TODO
+	return;
 }
 
 #endif /* NDEBUG */
@@ -63,9 +64,7 @@ sb65_runtime_read(
 	__in uint16_t address
 	)
 {
-	// TODO
-	return 0;
-	// ---
+	return g_memory[address];
 }
 
 uint8_t
@@ -73,9 +72,7 @@ sb65_runtime_read_word(
 	__in uint16_t address
 	)
 {
-	// TODO
-	return 0;
-	// ---
+	return (g_memory[address] | (g_memory[address + 1] << CHAR_BIT));
 }
 
 void
@@ -84,7 +81,7 @@ sb65_runtime_write(
 	__in uint8_t value
 	)
 {
-	// TODO
+	g_memory[address] = value;
 }
 
 void
@@ -93,7 +90,27 @@ sb65_runtime_write_word(
 	__in uint8_t value
 	)
 {
-	// TODO
+	g_memory[address] = value;
+	g_memory[address + 1] = (value >> CHAR_BIT);
+}
+
+void
+sb65_test_processor_setup(
+	__in sb65_processor_t *processor,
+	__in const sb65_register_t *address,
+	__in const sb65_instruction_t *instruction
+	)
+{
+	g_error = ERROR_SUCCESS;
+	memset(g_memory, 0, UINT16_MAX + 1);
+
+	for(size_t index = 0; index < INSTRUCTION_MAX; ++index) {
+		g_memory[address->word + index] = instruction->raw[index];
+	}
+
+	memset(processor, 0, sizeof(*processor));
+	processor->pc.word = address->word;
+	processor->sp.low = UINT8_MAX;
 }
 
 // TODO

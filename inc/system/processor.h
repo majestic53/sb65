@@ -20,37 +20,7 @@
 #define SB65_SYSTEM_PROCESSOR_H_
 
 #include "../common/buffer.h"
-
-typedef struct {
-	bool pending;
-	bool breakpoint;
-} sb65_interrupt_t;
-
-typedef union {
-
-	struct {
-
-		union {
-
-			struct {
-				uint8_t carry : 1;
-				uint8_t zero : 1;
-				uint8_t interrupt_disable : 1;
-				uint8_t decimal_mode : 1;
-				uint8_t breakpoint : 1;
-				uint8_t unused : 1;
-				uint8_t overflow : 1;
-				uint8_t negative : 1;
-			} flag;
-
-			uint8_t low;
-		};
-
-		uint8_t high;
-	};
-
-	uint16_t word;
-} __attribute__((packed)) sb65_register_t;
+#include "../common/processor.h"
 
 typedef struct {
 	uint32_t cycle;

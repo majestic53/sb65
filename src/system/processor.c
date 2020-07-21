@@ -130,6 +130,45 @@ sb65_processor_address(
 }
 
 static uint32_t
+sb65_processor_execute_adc(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_and(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_asl(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
 sb65_processor_execute_bbr(
 	__in sb65_processor_t *processor,
 	__in const sb65_instruction_t *instruction,
@@ -140,7 +179,7 @@ sb65_processor_execute_bbr(
 	uint32_t result = cycle->base;
 
 	if(!MASK_CHECK(sb65_runtime_read(instruction->operand.high),
-			MASK((instruction->opcode - OPCODE_BBR0_ZERO_PAGE_RELATIVE) / (OPCODE_BBR0_ZERO_PAGE_RELATIVE + 1)))) {
+			MASK((instruction->opcode - OPCODE_BBR0_ZERO_PAGE_RELATIVE) / (NIBBLE_MAX + 1)))) {
 		bool boundary = false;
 
 		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
@@ -161,7 +200,7 @@ sb65_processor_execute_bbs(
 	uint32_t result = cycle->base;
 
 	if(MASK_CHECK(sb65_runtime_read(instruction->operand.high),
-			MASK((instruction->opcode - OPCODE_BBS0_ZERO_PAGE_RELATIVE) / (OPCODE_BBR0_ZERO_PAGE_RELATIVE + 1)))) {
+			MASK((instruction->opcode - OPCODE_BBS0_ZERO_PAGE_RELATIVE) / (NIBBLE_MAX + 1)))) {
 		bool boundary = false;
 
 		processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
@@ -229,6 +268,19 @@ sb65_processor_execute_beq(
 	}
 
 	return result;
+}
+
+static uint32_t
+sb65_processor_execute_bit(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
 }
 
 static uint32_t
@@ -414,6 +466,58 @@ sb65_processor_execute_clv(
 }
 
 static uint32_t
+sb65_processor_execute_cmp(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_cpx(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_cpy(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_dec(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
 sb65_processor_execute_dex(
 	__in sb65_processor_t *processor,
 	__in const sb65_instruction_t *instruction,
@@ -441,6 +545,32 @@ sb65_processor_execute_dey(
 	processor->sr.flag.zero = !processor->y.low;
 
 	return cycle->base;
+}
+
+static uint32_t
+sb65_processor_execute_eor(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_inc(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
 }
 
 static uint32_t
@@ -474,6 +604,19 @@ sb65_processor_execute_iny(
 }
 
 static uint32_t
+sb65_processor_execute_jmp(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
 sb65_processor_execute_jsr(
 	__in sb65_processor_t *processor,
 	__in const sb65_instruction_t *instruction,
@@ -481,12 +624,62 @@ sb65_processor_execute_jsr(
 	__in sb65_mode_t mode
 	)
 {
-	bool boundary;
-
 	sb65_processor_push_word(processor, processor->pc.word);
-	processor->pc.word = sb65_processor_address(processor, &instruction->operand, mode, &boundary);
+	processor->pc.word = instruction->operand.word;
 
 	return (cycle->base + cycle->read_write_modify);
+}
+
+static uint32_t
+sb65_processor_execute_lda(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_ldx(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_ldy(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_lsr(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
 }
 
 static uint32_t
@@ -498,6 +691,19 @@ sb65_processor_execute_nop(
 	)
 {
 	return cycle->base;
+}
+
+static uint32_t
+sb65_processor_execute_ora(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
 }
 
 static uint32_t
@@ -611,6 +817,48 @@ sb65_processor_execute_ply(
 }
 
 static uint32_t
+sb65_processor_execute_rmb(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint8_t value = sb65_runtime_read(instruction->operand.low);
+
+	MASK_CLEAR(value, MASK((instruction->opcode - OPCODE_RMB0_ZERO_PAGE) / (NIBBLE_MAX + 1)));
+	sb65_runtime_write(instruction->operand.low, value);
+
+	return (cycle->base + cycle->read_write_modify);
+}
+
+static uint32_t
+sb65_processor_execute_rol(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_ror(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
 sb65_processor_execute_rti(
 	__in sb65_processor_t *processor,
 	__in const sb65_instruction_t *instruction,
@@ -635,6 +883,19 @@ sb65_processor_execute_rts(
 	processor->pc.word = sb65_processor_pull_word(processor);
 
 	return cycle->base;
+}
+
+static uint32_t
+sb65_processor_execute_sbc(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
 }
 
 static uint32_t
@@ -677,6 +938,35 @@ sb65_processor_execute_sei(
 }
 
 static uint32_t
+sb65_processor_execute_smb(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint8_t value = sb65_runtime_read(instruction->operand.low);
+
+	MASK_SET(value, MASK((instruction->opcode - OPCODE_SMB0_ZERO_PAGE) / (NIBBLE_MAX + 1)));
+	sb65_runtime_write(instruction->operand.low, value);
+
+	return (cycle->base + cycle->read_write_modify);
+}
+
+static uint32_t
+sb65_processor_execute_sta(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
 sb65_processor_execute_stp(
 	__in sb65_processor_t *processor,
 	__in const sb65_instruction_t *instruction,
@@ -689,6 +979,45 @@ sb65_processor_execute_stp(
 	processor->stop = true;
 
 	return cycle->base;
+}
+
+static uint32_t
+sb65_processor_execute_stx(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_sty(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
+}
+
+static uint32_t
+sb65_processor_execute_stz(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	// TODO
+	return 0;
+	// ---
 }
 
 static uint32_t
@@ -719,6 +1048,38 @@ sb65_processor_execute_tay(
 	processor->sr.flag.zero = !processor->y.low;
 
 	return cycle->base;
+}
+
+static uint32_t
+sb65_processor_execute_trb(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint8_t value = sb65_runtime_read(instruction->operand.word);
+
+	processor->sr.flag.zero = (processor->ac.low & value);
+	sb65_runtime_write(instruction->operand.word, value & ~processor->ac.low);
+
+	return (cycle->base + cycle->read_write_modify);
+}
+
+static uint32_t
+sb65_processor_execute_tsb(
+	__in sb65_processor_t *processor,
+	__in const sb65_instruction_t *instruction,
+	__in const sb65_mode_cycle_t *cycle,
+	__in sb65_mode_t mode
+	)
+{
+	uint8_t value = sb65_runtime_read(instruction->operand.word);
+
+	processor->sr.flag.zero = (processor->ac.low & value);
+	sb65_runtime_write(instruction->operand.word, value | processor->ac.low);
+
+	return (cycle->base + cycle->read_write_modify);
 }
 
 static uint32_t
@@ -796,101 +1157,101 @@ sb65_processor_execute_wai(
 
 static const sb65_instruction_cb EXECUTE[] = {
 	// 0x00
-	sb65_processor_execute_brk, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_brk, sb65_processor_execute_ora, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_tsb, sb65_processor_execute_ora, sb65_processor_execute_asl, sb65_processor_execute_rmb,
 	// 0x08
-	sb65_processor_execute_php, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbr,
+	sb65_processor_execute_php, sb65_processor_execute_ora, sb65_processor_execute_asl, sb65_processor_execute_nop,
+	sb65_processor_execute_tsb, sb65_processor_execute_ora, sb65_processor_execute_asl, sb65_processor_execute_bbr,
 	// 0x10
-	sb65_processor_execute_bpl, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_bpl, sb65_processor_execute_ora, sb65_processor_execute_ora, sb65_processor_execute_nop,
+	sb65_processor_execute_trb, sb65_processor_execute_ora, sb65_processor_execute_asl, sb65_processor_execute_rmb,
 	// 0x18
-	sb65_processor_execute_clc, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbr,
+	sb65_processor_execute_clc, sb65_processor_execute_ora, sb65_processor_execute_inc, sb65_processor_execute_nop,
+	sb65_processor_execute_trb, sb65_processor_execute_ora, sb65_processor_execute_asl, sb65_processor_execute_bbr,
 	// 0x20
-	sb65_processor_execute_jsr, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_jsr, sb65_processor_execute_and, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_bit, sb65_processor_execute_and, sb65_processor_execute_rol, sb65_processor_execute_rmb,
 	// 0x28
-	sb65_processor_execute_plp, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbr,
+	sb65_processor_execute_plp, sb65_processor_execute_and, sb65_processor_execute_rol, sb65_processor_execute_nop,
+	sb65_processor_execute_bit, sb65_processor_execute_and, sb65_processor_execute_rol, sb65_processor_execute_bbr,
 	// 0x30
-	sb65_processor_execute_bmi, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_bmi, sb65_processor_execute_and, sb65_processor_execute_and, sb65_processor_execute_nop,
+	sb65_processor_execute_bit, sb65_processor_execute_and, sb65_processor_execute_rol, sb65_processor_execute_rmb,
 	// 0x38
-	sb65_processor_execute_sec, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbr,
+	sb65_processor_execute_sec, sb65_processor_execute_and, sb65_processor_execute_dec, sb65_processor_execute_nop,
+	sb65_processor_execute_bit, sb65_processor_execute_and, sb65_processor_execute_rol, sb65_processor_execute_bbr,
 	// 0x40
-	sb65_processor_execute_rti, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
-	sb65_processor_execute_nop, NULL, NULL, NULL,
+	sb65_processor_execute_rti, sb65_processor_execute_eor, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, sb65_processor_execute_eor, sb65_processor_execute_lsr, sb65_processor_execute_rmb,
 	// 0x48
-	sb65_processor_execute_pha, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbr,
+	sb65_processor_execute_pha, sb65_processor_execute_eor, sb65_processor_execute_lsr, sb65_processor_execute_nop,
+	sb65_processor_execute_jmp, sb65_processor_execute_eor, sb65_processor_execute_lsr, sb65_processor_execute_bbr,
 	// 0x50
-	sb65_processor_execute_bvc, NULL, NULL, sb65_processor_execute_nop,
-	sb65_processor_execute_nop, NULL, NULL, NULL,
+	sb65_processor_execute_bvc, sb65_processor_execute_eor, sb65_processor_execute_eor, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, sb65_processor_execute_eor, sb65_processor_execute_lsr, sb65_processor_execute_rmb,
 	// 0x58
-	sb65_processor_execute_cli, NULL, sb65_processor_execute_phy, sb65_processor_execute_nop,
-	sb65_processor_execute_nop, NULL, NULL, sb65_processor_execute_bbr,
+	sb65_processor_execute_cli, sb65_processor_execute_eor, sb65_processor_execute_phy, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, sb65_processor_execute_eor, sb65_processor_execute_lsr, sb65_processor_execute_bbr,
 	// 0x60
-	sb65_processor_execute_rts, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_rts, sb65_processor_execute_adc, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_stz, sb65_processor_execute_adc, sb65_processor_execute_ror, sb65_processor_execute_rmb,
 	// 0x68
-	sb65_processor_execute_pla, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbr,
+	sb65_processor_execute_pla, sb65_processor_execute_adc, sb65_processor_execute_ror, sb65_processor_execute_nop,
+	sb65_processor_execute_jmp, sb65_processor_execute_adc, sb65_processor_execute_ror, sb65_processor_execute_bbr,
 	// 0x70
-	sb65_processor_execute_bvs, NULL, sb65_processor_execute_nop, NULL,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_bvs, sb65_processor_execute_adc, sb65_processor_execute_adc, sb65_processor_execute_nop,
+	sb65_processor_execute_stz, sb65_processor_execute_adc, sb65_processor_execute_ror, sb65_processor_execute_rmb,
 	// 0x78
-	sb65_processor_execute_sei, NULL, sb65_processor_execute_ply, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbr,
+	sb65_processor_execute_sei, sb65_processor_execute_adc, sb65_processor_execute_ply, sb65_processor_execute_nop,
+	sb65_processor_execute_jmp, sb65_processor_execute_adc, sb65_processor_execute_ror, sb65_processor_execute_bbr,
 	// 0x80
-	sb65_processor_execute_bra, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_bra, sb65_processor_execute_sta, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_sty, sb65_processor_execute_sta, sb65_processor_execute_stx, sb65_processor_execute_smb,
 	// 0x88
-	sb65_processor_execute_dey, NULL, sb65_processor_execute_txa, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbs,
+	sb65_processor_execute_dey, sb65_processor_execute_bit, sb65_processor_execute_txa, sb65_processor_execute_nop,
+	sb65_processor_execute_sty, sb65_processor_execute_sta, sb65_processor_execute_stx, sb65_processor_execute_bbs,
 	// 0x90
-	sb65_processor_execute_bcc, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_bcc, sb65_processor_execute_sta, sb65_processor_execute_sta, sb65_processor_execute_nop,
+	sb65_processor_execute_sty, sb65_processor_execute_sta, sb65_processor_execute_stx, sb65_processor_execute_smb,
 	// 0x98
-	sb65_processor_execute_tya, NULL, sb65_processor_execute_txs, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbs,
+	sb65_processor_execute_tya, sb65_processor_execute_sta, sb65_processor_execute_txs, sb65_processor_execute_nop,
+	sb65_processor_execute_stz, sb65_processor_execute_sta, sb65_processor_execute_stz, sb65_processor_execute_bbs,
 	// 0xa0
-	NULL, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_ldy, sb65_processor_execute_lda, sb65_processor_execute_ldx, sb65_processor_execute_nop,
+	sb65_processor_execute_ldy, sb65_processor_execute_lda, sb65_processor_execute_ldx, sb65_processor_execute_smb,
 	// 0xa8
-	sb65_processor_execute_tay, NULL, sb65_processor_execute_tax, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbs,
+	sb65_processor_execute_tay, sb65_processor_execute_lda, sb65_processor_execute_tax, sb65_processor_execute_nop,
+	sb65_processor_execute_ldy, sb65_processor_execute_lda, sb65_processor_execute_ldx, sb65_processor_execute_bbs,
 	// 0xb0
-	sb65_processor_execute_bcs, NULL, NULL, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_bcs, sb65_processor_execute_lda, sb65_processor_execute_lda, sb65_processor_execute_nop,
+	sb65_processor_execute_ldy, sb65_processor_execute_lda, sb65_processor_execute_ldx, sb65_processor_execute_smb,
 	// 0xb8
-	sb65_processor_execute_clv, NULL, sb65_processor_execute_tsx, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbs,
+	sb65_processor_execute_clv, sb65_processor_execute_lda, sb65_processor_execute_tsx, sb65_processor_execute_nop,
+	sb65_processor_execute_ldy, sb65_processor_execute_lda, sb65_processor_execute_ldx, sb65_processor_execute_bbs,
 	// 0xc0
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_cpy, sb65_processor_execute_cmp, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_cpy, sb65_processor_execute_cmp, sb65_processor_execute_dec, sb65_processor_execute_smb,
 	// 0xc8
-	sb65_processor_execute_iny, NULL, sb65_processor_execute_dex, sb65_processor_execute_wai,
-	NULL, NULL, NULL, sb65_processor_execute_bbs,
+	sb65_processor_execute_iny, sb65_processor_execute_cmp, sb65_processor_execute_dex, sb65_processor_execute_wai,
+	sb65_processor_execute_cpy, sb65_processor_execute_cmp, sb65_processor_execute_dec, sb65_processor_execute_bbs,
 	// 0xd0
-	sb65_processor_execute_bne, NULL, NULL, sb65_processor_execute_nop,
-	sb65_processor_execute_nop, NULL, NULL, NULL,
+	sb65_processor_execute_bne, sb65_processor_execute_cmp, sb65_processor_execute_cmp, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, sb65_processor_execute_cmp, sb65_processor_execute_dec, sb65_processor_execute_smb,
 	// 0xd8
-	sb65_processor_execute_cld, NULL, sb65_processor_execute_phx, sb65_processor_execute_stp,
-	NULL, NULL, NULL, sb65_processor_execute_bbs,
+	sb65_processor_execute_cld, sb65_processor_execute_cmp, sb65_processor_execute_phx, sb65_processor_execute_stp,
+	sb65_processor_execute_nop, sb65_processor_execute_cmp, sb65_processor_execute_dec, sb65_processor_execute_bbs,
 	// 0xe0
-	NULL, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
-	NULL, NULL, NULL, NULL,
+	sb65_processor_execute_cpx, sb65_processor_execute_smb, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_cpx, sb65_processor_execute_smb, sb65_processor_execute_inc, sb65_processor_execute_smb,
 	// 0xe8
-	sb65_processor_execute_inx, NULL, sb65_processor_execute_nop, sb65_processor_execute_nop,
-	NULL, NULL, NULL, sb65_processor_execute_bbs,
+	sb65_processor_execute_inx, sb65_processor_execute_sbc, sb65_processor_execute_nop, sb65_processor_execute_nop,
+	sb65_processor_execute_cpx, sb65_processor_execute_sbc, sb65_processor_execute_inc, sb65_processor_execute_bbs,
 	// 0xf0
-	sb65_processor_execute_beq, NULL, NULL, sb65_processor_execute_nop,
-	sb65_processor_execute_nop, NULL, NULL, NULL,
+	sb65_processor_execute_beq, sb65_processor_execute_sbc, sb65_processor_execute_sbc, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, sb65_processor_execute_sbc, sb65_processor_execute_inc, sb65_processor_execute_smb,
 	// 0xf8
-	sb65_processor_execute_sed, NULL, sb65_processor_execute_plx, sb65_processor_execute_nop,
-	sb65_processor_execute_nop, NULL, NULL, sb65_processor_execute_bbs,
+	sb65_processor_execute_sed, sb65_processor_execute_sbc, sb65_processor_execute_plx, sb65_processor_execute_nop,
+	sb65_processor_execute_nop, sb65_processor_execute_sbc, sb65_processor_execute_inc, sb65_processor_execute_bbs,
 	};
 
 static uint32_t
